@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LinguiCards.Controllers;
 
-[Route("api/User")]
+[Route("api/[controller]")]
 [ApiController]
 public class UserController : ControllerBase
 {

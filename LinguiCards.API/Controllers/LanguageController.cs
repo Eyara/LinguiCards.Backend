@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LinguiCards.Controllers;
 
 [Authorize]
-[Route("api/Language")]
+[Route("api/[controller]")]
 [ApiController]
 public class LanguageController : ControllerBase
 {
