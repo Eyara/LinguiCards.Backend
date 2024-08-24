@@ -1,5 +1,9 @@
+using System.Reflection;
 using System.Text;
+using LinguiCards.Application.Commands.User.AddUserCommand;
+using LinguiCards.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -29,6 +33,11 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.Zero // Disable default 5 minutes
         };
     });
+
+builder.Services.AddDbContext<LinguiCardsDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(AddUserCommand).GetTypeInfo().Assembly));
 
 builder.Services.AddAuthorization();
 
@@ -62,6 +71,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddControllers();
+builder.Services.AddInfrastructure();
 
 var app = builder.Build();
 
@@ -79,4 +89,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseHttpsRedirection();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<LinguiCardsDbContext>();
+    if (context.Database.GetPendingMigrations().Any()) context.Database.Migrate();
+}
+
 app.Run();

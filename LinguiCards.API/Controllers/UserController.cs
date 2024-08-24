@@ -1,9 +1,9 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+﻿using LinguiCards.Application.Commands.User.AddUserCommand;
+using LinguiCards.Application.Common;
+using LinguiCards.Application.Queries.User.GetUserTokenQuery;
 using LinguiCards.Controllers.Models.User;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace LinguiCards.Controllers;
 
@@ -12,47 +12,23 @@ namespace LinguiCards.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IConfiguration _configuration;
+    private readonly IMediator _mediator;
 
-    public UserController(IConfiguration configuration)
+    public UserController(IConfiguration configuration, IMediator mediator)
     {
         _configuration = configuration;
+        _mediator = mediator;
+    }
+
+    [HttpPost("register")]
+    public async Task<RequestResult> Register([FromBody] UserLoginModel model)
+    {
+        return await _mediator.Send(new AddUserCommand(model.Username, model.Password));
     }
 
     [HttpPost("login")]
-    public IActionResult Login([FromBody] UserLoginModel login)
+    public async Task<string> Login([FromBody] UserLoginModel model)
     {
-        if (IsValidUser(login))
-        {
-            var token = GenerateJwtToken(login.Username);
-            return Ok(new { token });
-        }
-
-        return Unauthorized();
-    }
-
-    private bool IsValidUser(UserLoginModel login)
-    {
-        // Replace with your user validation logic
-        return login.Username == "testuser" && login.Password == "password";
-    }
-
-    private string GenerateJwtToken(string username)
-    {
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, username)
-            }),
-            Expires = DateTime.UtcNow.AddMinutes(30),
-            Issuer = _configuration["Jwt:Issuer"],
-            Audience = _configuration["Jwt:Audience"],
-            SigningCredentials =
-                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+        return await _mediator.Send(new GetUserTokenQuery(_configuration, model.Username, model.Password));
     }
 }

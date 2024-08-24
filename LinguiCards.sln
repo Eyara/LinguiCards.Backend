@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguiCards.API", "LinguiCa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguiCards.Domain", "LinguiCards.Domain\LinguiCards.Domain.csproj", "{E5CD67E3-E944-4D24-8A21-ABBCEA06F1A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguiCards.Infrastructure", "LinguiCards.Infrastructure\LinguiCards.Infrastructure.csproj", "{DD16A5E2-9040-4792-9871-B5C394A26739}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguiCards.Application", "LinguiCards.Application\LinguiCards.Application.csproj", "{53B38B4C-B664-436A-88E6-561A841CDCD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{E5CD67E3-E944-4D24-8A21-ABBCEA06F1A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5CD67E3-E944-4D24-8A21-ABBCEA06F1A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5CD67E3-E944-4D24-8A21-ABBCEA06F1A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD16A5E2-9040-4792-9871-B5C394A26739}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD16A5E2-9040-4792-9871-B5C394A26739}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD16A5E2-9040-4792-9871-B5C394A26739}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD16A5E2-9040-4792-9871-B5C394A26739}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53B38B4C-B664-436A-88E6-561A841CDCD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53B38B4C-B664-436A-88E6-561A841CDCD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53B38B4C-B664-436A-88E6-561A841CDCD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53B38B4C-B664-436A-88E6-561A841CDCD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
