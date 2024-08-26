@@ -4,8 +4,9 @@ namespace LinguiCards.Application.Common.Interfaces;
 
 public interface IWordRepository
 {
-    Task<List<WordDto>> GetUnlearned(int languageId, int percentThreshold, CancellationToken token);
+    Task<WordDto> GetByIdAsync(int wordId, CancellationToken token);
+    Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, CancellationToken token);
     Task AddAsync(WordDto word, int languageId, CancellationToken token);
-    Task UpdateLearnLevel(int wordId, int percent, CancellationToken token);
+    Task UpdateLearnLevel(int wordId, double percent, CancellationToken token);
     Task DeleteAsync(int wordId, CancellationToken token);
 }

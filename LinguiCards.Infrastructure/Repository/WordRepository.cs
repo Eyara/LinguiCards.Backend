@@ -14,7 +14,25 @@ public class WordRepository : IWordRepository
         _dbContext = dbContext;
     }
 
-    public async Task<List<WordDto>> GetUnlearned(int languageId, int percentThreshold, CancellationToken token)
+    public async Task<WordDto> GetByIdAsync(int wordId, CancellationToken token)
+    {
+        var wordEntity = await _dbContext.Words
+            .FirstOrDefaultAsync(l => l.Id == wordId, token);
+
+        if (wordEntity == null) return null;
+
+        return new WordDto
+        {
+            Id = wordEntity.Id,
+            LanguageId = wordEntity.LanguageId,
+            Name = wordEntity.Name,
+            TranslatedName = wordEntity.TranslatedName,
+            LearnedPercent = wordEntity.LearnedPercent,
+            LastUpdated = wordEntity.LastUpdated
+        };
+    }
+
+    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, CancellationToken token)
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId && w.LearnedPercent < percentThreshold)
@@ -38,24 +56,23 @@ public class WordRepository : IWordRepository
         await _dbContext.Words.AddAsync(
             new Word
             {
-                Name = word.Name, TranslatedName = word.TranslatedName, LanguageId = languageId, LearnedPercent = 0
+                Name = word.Name, TranslatedName = word.TranslatedName, LanguageId = languageId, LearnedPercent = 0,
+                LastUpdated = DateTime.UtcNow
             }, token);
 
         await _dbContext.SaveChangesAsync(token);
     }
 
-    public async Task UpdateLearnLevel(int wordId, int percent, CancellationToken token)
+    public async Task UpdateLearnLevel(int wordId, double percent, CancellationToken token)
     {
         var word = await _dbContext.Words
             .FirstOrDefaultAsync(w => w.Id == wordId, token);
 
-        if (word == null)
-        {
-            throw new Exception();
-        }
+        if (word == null) throw new Exception();
 
         word.LearnedPercent = percent;
-        word.LastUpdated = DateTime.Now;;
+        word.LastUpdated = DateTime.UtcNow;
+        ;
         await _dbContext.SaveChangesAsync(token);
     }
 
@@ -64,10 +81,7 @@ public class WordRepository : IWordRepository
         var word = await _dbContext.Words
             .FirstOrDefaultAsync(w => w.Id == wordId, token);
 
-        if (word == null)
-        {
-            throw new Exception();
-        }
+        if (word == null) throw new Exception();
 
         _dbContext.Remove(word);
         await _dbContext.SaveChangesAsync(token);

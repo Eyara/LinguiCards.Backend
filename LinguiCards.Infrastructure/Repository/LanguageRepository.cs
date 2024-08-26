@@ -30,6 +30,8 @@ public class LanguageRepository : ILanguageRepository
         var languageEntity = await _dbContext.Languages
             .FirstOrDefaultAsync(l => l.Id == languageId, token);
 
+        if (languageEntity == null) return null;
+
         return new LanguageDto
         {
             Id = languageEntity.Id, Name = languageEntity.Name, FlagUrl = languageEntity.FlagUrl,
