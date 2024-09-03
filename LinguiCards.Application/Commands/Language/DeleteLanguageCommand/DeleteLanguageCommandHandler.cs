@@ -22,6 +22,8 @@ public class DeleteLanguageCommandHandler : IRequestHandler<DeleteLanguageComman
 
         var languageEntity = await _languageRepository.GetByIdAsync(request.Id, cancellationToken);
 
+        if (languageEntity == null) throw new Exception();
+
         if (languageEntity.UserId != user.Id) throw new Exception();
 
         await _languageRepository.DeleteAsync(request.Id, cancellationToken);

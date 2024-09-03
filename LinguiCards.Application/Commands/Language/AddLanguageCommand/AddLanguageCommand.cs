@@ -3,4 +3,4 @@ using MediatR;
 
 namespace LinguiCards.Application.Commands.Language.AddLanguageCommand;
 
-public record AddLanguageCommand(LanguageDto Language, string Username) : IRequest<bool>;
+public record AddLanguageCommand(LanguageAddDto Language, string Username) : IRequest<bool>;

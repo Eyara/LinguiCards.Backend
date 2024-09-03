@@ -3,6 +3,7 @@ using LinguiCards.Application.Commands.Language.AddLanguageCommand;
 using LinguiCards.Application.Commands.Language.DeleteLanguageCommand;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Queries.Language.GetAllLanguagesQuery;
+using LinguiCards.Application.Queries.LanguageDictionary.GetAllLanguageDictionariesQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,8 +30,15 @@ public class LanguageController : ControllerBase
         return await _mediator.Send(new GetAllLanguagesQuery(username));
     }
 
+    [Route("dictionary")]
+    [HttpGet]
+    public async Task<List<LanguageDictionaryDto>> GetDictionary()
+    {
+        return await _mediator.Send(new GetAllLanguageDictionariesQuery());
+    }
+
     [HttpPost]
-    public async Task<bool> Post(LanguageDto model)
+    public async Task<bool> Post(LanguageAddDto model)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new AddLanguageCommand(model, username));

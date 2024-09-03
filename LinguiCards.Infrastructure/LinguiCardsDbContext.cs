@@ -12,6 +12,7 @@ public class LinguiCardsDbContext : DbContext
     public DbSet<User?> Users { get; set; }
     public DbSet<Language> Languages { get; set; }
     public DbSet<Word> Words { get; set; }
+    public DbSet<LanguageDictionary> LanguageDictionaries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,19 @@ public class LinguiCardsDbContext : DbContext
             .HasOne(w => w.Language)
             .WithMany(l => l.Words)
             .HasForeignKey(w => w.LanguageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LanguageDictionary>()
+            .HasKey(c => c.Id);
+
+        modelBuilder.Entity<LanguageDictionary>()
+            .Property(c => c.Id)
+            .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<Language>()
+            .HasOne(l => l.LanguageDictionary)
+            .WithMany(l => l.Languages)
+            .HasForeignKey(l => l.LanguageDictionaryId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

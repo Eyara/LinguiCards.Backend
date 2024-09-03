@@ -3,6 +3,7 @@ using System;
 using LinguiCards.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LinguiCards.Infrastructure.Migrations
 {
     [DbContext(typeof(LinguiCardsDbContext))]
-    partial class LinguiCardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240903021318_AddLanguageDictionary")]
+    partial class AddLanguageDictionary
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,7 +45,8 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LanguageDictionaryId");
+                    b.HasIndex("LanguageDictionaryId")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -130,9 +134,9 @@ namespace LinguiCards.Infrastructure.Migrations
             modelBuilder.Entity("LinguiCards.Domain.Entities.Language", b =>
                 {
                     b.HasOne("LinguiCards.Domain.Entities.LanguageDictionary", "LanguageDictionary")
-                        .WithMany("Languages")
-                        .HasForeignKey("LanguageDictionaryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithOne()
+                        .HasForeignKey("LinguiCards.Domain.Entities.Language", "LanguageDictionaryId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("LinguiCards.Domain.Entities.User", "User")
@@ -160,11 +164,6 @@ namespace LinguiCards.Infrastructure.Migrations
             modelBuilder.Entity("LinguiCards.Domain.Entities.Language", b =>
                 {
                     b.Navigation("Words");
-                });
-
-            modelBuilder.Entity("LinguiCards.Domain.Entities.LanguageDictionary", b =>
-                {
-                    b.Navigation("Languages");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.User", b =>

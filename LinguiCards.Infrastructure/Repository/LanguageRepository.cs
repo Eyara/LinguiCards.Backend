@@ -17,35 +17,42 @@ public class LanguageRepository : ILanguageRepository
     public async Task<List<LanguageDto>> GetAllAsync(int userId, CancellationToken token)
     {
         var languageEntities = await _dbContext.Languages
+            .Include(l => l.LanguageDictionary)
             .Where(l => l.UserId == userId)
             .ToListAsync(token);
 
         return languageEntities
-            .Select(l => new LanguageDto { Id = l.Id, Name = l.Name, FlagUrl = l.FlagUrl, UserId = l.UserId })
+            .Select(l => new LanguageDto
+            {
+                Id = l.Id, Name = l.Name, Url = l.LanguageDictionary.Url, UserId = l.UserId,
+                LanguageDictionaryId = l.LanguageDictionaryId
+            })
             .ToList();
     }
 
     public async Task<LanguageDto> GetByIdAsync(int languageId, CancellationToken token)
     {
         var languageEntity = await _dbContext.Languages
+            .Include(l => l.LanguageDictionary)
             .FirstOrDefaultAsync(l => l.Id == languageId, token);
 
         if (languageEntity == null) return null;
 
         return new LanguageDto
         {
-            Id = languageEntity.Id, Name = languageEntity.Name, FlagUrl = languageEntity.FlagUrl,
-            UserId = languageEntity.UserId
+            Id = languageEntity.Id, Name = languageEntity.Name, Url = languageEntity.LanguageDictionary.Url,
+            UserId = languageEntity.UserId,
+            LanguageDictionaryId = languageEntity.LanguageDictionaryId
         };
     }
 
-    public async Task AddAsync(LanguageDto language, int userId, CancellationToken token)
+    public async Task AddAsync(LanguageAddDto language, int userId, CancellationToken token)
     {
         var languageEntity = new Language
         {
             Name = language.Name,
-            FlagUrl = language.FlagUrl,
-            UserId = userId
+            UserId = userId,
+            LanguageDictionaryId = language.LanguageDictionaryId
         };
 
         await _dbContext.Languages.AddAsync(languageEntity, token);
