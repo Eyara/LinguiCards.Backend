@@ -30,7 +30,7 @@ public class WordController : ControllerBase
         return await _mediator.Send(new GetUnlearnedWordsQuery(languageId, username));
     }
 
-    [Route("api/Language/{languageId}/Word")]
+    [Route("/api/Language/{languageId}/Word")]
     [HttpPost]
     public async Task<bool> Post(WordDto model, int languageId)
     {
@@ -38,7 +38,7 @@ public class WordController : ControllerBase
         return await _mediator.Send(new AddWordCommand(model, languageId, username));
     }
 
-    [Route("/updateLearnLevel")]
+    [Route("updateLearnLevel")]
     [HttpPut]
     public async Task<bool> Put(int wordId, bool wasSuccessful)
     {
