@@ -71,6 +71,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 builder.Services.AddInfrastructure();
 
 var app = builder.Build();
