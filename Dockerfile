@@ -28,11 +28,14 @@ RUN dotnet publish -c Release -o /app/publish
 # Create the final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
+
+# Install curl for debugging purposes
+RUN apt-get update && apt-get install -y curl net-tools && rm -rf /var/lib/apt/lists/*
+
 COPY --from=publish /app/publish .
 
 # Expose the ports the app will run on
 EXPOSE 80
-EXPOSE 443
 
 # Set the entry point for the application
 ENTRYPOINT ["dotnet", "LinguiCards.API.dll"]
