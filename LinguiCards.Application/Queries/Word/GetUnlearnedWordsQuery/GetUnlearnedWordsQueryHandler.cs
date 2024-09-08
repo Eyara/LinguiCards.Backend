@@ -1,4 +1,6 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Exceptions.Base;
+using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Constants;
 using MediatR;
@@ -23,13 +25,13 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 
-        if (user == null) throw new Exception();
+        if (user == null) throw new UserNotFoundException();
 
         var languageEntity = await _languageRepository.GetByIdAsync(request.LanguageId, cancellationToken);
 
-        if (languageEntity == null) throw new Exception();
+        if (languageEntity == null) throw new LanguageNotFoundException();
 
-        if (languageEntity.UserId != user.Id) throw new Exception();
+        if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
         // TODO: add degrading of learn percent over time
 

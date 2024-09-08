@@ -2,6 +2,7 @@
 using LinguiCards.Application.Commands.Word.AddWordCommand;
 using LinguiCards.Application.Commands.Word.DeleteWordCommand;
 using LinguiCards.Application.Commands.Word.UpdateLearnLevelCommand;
+using LinguiCards.Application.Commands.Word.UpdateWordCommand;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Queries.Word.GetUnlearnedWordsQuery;
 using MediatR;
@@ -38,14 +39,20 @@ public class WordController : ControllerBase
         return await _mediator.Send(new AddWordCommand(model, languageId, username));
     }
 
+
+    [HttpPut]
+    public async Task<bool> Put(int wordId, string name, string translationName)
+    {
+        return await _mediator.Send(new UpdateWordCommand(wordId, name, translationName));
+    }
+
     [Route("updateLearnLevel")]
     [HttpPut]
-    public async Task<bool> Put(int wordId, bool wasSuccessful)
+    public async Task<bool> UpdateLearnLevel(int wordId, bool wasSuccessful)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new UpdateLearnLevelCommand(wordId, wasSuccessful, username));
     }
-
 
     [HttpDelete]
     public async Task<bool> Delete(int id)

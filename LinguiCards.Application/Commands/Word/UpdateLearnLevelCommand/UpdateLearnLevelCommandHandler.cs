@@ -1,4 +1,6 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Exceptions.Base;
+using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Constants;
 using MediatR;
 
@@ -22,24 +24,25 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 
-        if (user == null) throw new Exception();
+        if (user == null) throw new UserNotFoundException();
 
         var wordEntity = await _wordRepository.GetByIdAsync(request.WordId, cancellationToken);
 
-        if (wordEntity == null) throw new Exception();
+        if (wordEntity == null) throw new WordNotFoundException();
 
         var languageEntity = await _languageRepository.GetByIdAsync(wordEntity.LanguageId, cancellationToken);
 
-        if (languageEntity == null) throw new Exception();
+        if (languageEntity == null) throw new LanguageNotFoundException();
 
-        if (languageEntity.UserId != user.Id) throw new Exception();
+        if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
         var newLevelPercent = request.WasSuccessful
             ? wordEntity.LearnedPercent + LearningSettings.LearnStep
             : wordEntity.LearnedPercent - LearningSettings.LearnStep;
 
 
-        await _wordRepository.UpdateLearnLevel(request.WordId, newLevelPercent, cancellationToken);
+        await _wordRepository.UpdateLearnLevel(request.WordId, newLevelPercent >= 0 ? newLevelPercent : 0,
+            cancellationToken);
         return true;
     }
 }

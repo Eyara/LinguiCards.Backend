@@ -63,6 +63,19 @@ public class WordRepository : IWordRepository
         await _dbContext.SaveChangesAsync(token);
     }
 
+    public async Task UpdateAsync(int wordId, string name, string translationName, CancellationToken token)
+    {
+        var word = await _dbContext.Words
+            .FirstOrDefaultAsync(w => w.Id == wordId, token);
+
+        if (word == null) throw new Exception();
+
+        word.Name = name;
+        word.TranslatedName = translationName;
+
+        await _dbContext.SaveChangesAsync(token);
+    }
+
     public async Task UpdateLearnLevel(int wordId, double percent, CancellationToken token)
     {
         var word = await _dbContext.Words

@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using LinguiCards.Application.Commands.User.AddUserCommand;
+using LinguiCards.Application.Middlewares;
 using LinguiCards.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -91,6 +92,7 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.UseHttpsRedirection();
+app.UseMiddleware<ExceptionMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {

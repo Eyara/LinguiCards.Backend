@@ -1,4 +1,5 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using MediatR;
 
@@ -19,7 +20,7 @@ public class GetAllLanguagesQueryHandler : IRequestHandler<GetAllLanguagesQuery,
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 
-        if (user == null) throw new Exception();
+        if (user == null) throw new UserNotFoundException();
 
         return await _languageRepository.GetAllAsync(user.Id, cancellationToken);
     }

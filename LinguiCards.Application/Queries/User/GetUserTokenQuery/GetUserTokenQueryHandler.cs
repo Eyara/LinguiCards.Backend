@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Helpers;
 using MediatR;
@@ -23,8 +24,7 @@ public class GetUserTokenQueryHandler : IRequestHandler<GetUserTokenQuery, strin
         if (await IsValidUser(request.Username, request.Password, cancellationToken))
             return GenerateJwtToken(request.Username, request.Configuration);
 
-        // TODO: add a middleware to handle custom Exceptions
-        throw new Exception();
+        throw new InvalidJwtTokenException();
     }
 
     private async Task<bool> IsValidUser(string username, string password, CancellationToken cancellationToken)

@@ -1,4 +1,5 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Interfaces;
 using MediatR;
 
 namespace LinguiCards.Application.Commands.Language.AddLanguageCommand;
@@ -18,7 +19,7 @@ public class AddLanguageCommandHandler : IRequestHandler<AddLanguageCommand, boo
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 
-        if (user == null) throw new Exception();
+        if (user == null) throw new UserNotFoundException();
 
         await _languageRepository.AddAsync(request.Language, user.Id, cancellationToken);
         return true;
