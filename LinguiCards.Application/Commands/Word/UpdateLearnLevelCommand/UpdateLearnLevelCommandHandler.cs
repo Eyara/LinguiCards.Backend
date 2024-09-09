@@ -11,13 +11,15 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
     private readonly ILanguageRepository _languageRepository;
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
+    private readonly IWordChangeHistoryRepository _wordChangeHistoryRepository;
 
     public UpdateLearnLevelCommandHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
-        IWordRepository wordRepository)
+        IWordRepository wordRepository, IWordChangeHistoryRepository wordChangeHistoryRepository)
     {
         _languageRepository = languageRepository;
         _usersRepository = usersRepository;
         _wordRepository = wordRepository;
+        _wordChangeHistoryRepository = wordChangeHistoryRepository;
     }
 
     public async Task<bool> Handle(UpdateLearnLevelCommand request, CancellationToken cancellationToken)
@@ -40,9 +42,11 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
             ? wordEntity.LearnedPercent + LearningSettings.LearnStep
             : wordEntity.LearnedPercent - LearningSettings.LearnStep;
 
-
         await _wordRepository.UpdateLearnLevel(request.WordId, newLevelPercent >= 0 ? newLevelPercent : 0,
             cancellationToken);
+
+        await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful, cancellationToken);
+        
         return true;
     }
 }
