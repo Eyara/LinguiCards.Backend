@@ -32,10 +32,11 @@ public class WordRepository : IWordRepository
         };
     }
 
-    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, CancellationToken token)
+    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, CancellationToken token, int top = 15)
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId && w.LearnedPercent < percentThreshold)
+            .Take(top)
             .ToListAsync(token);
 
         return wordEntities
