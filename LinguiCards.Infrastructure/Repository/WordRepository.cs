@@ -32,11 +32,32 @@ public class WordRepository : IWordRepository
         };
     }
 
+    public async Task<List<WordDto>> GetAllAsync(int languageId, CancellationToken token)
+    {
+        var wordEntities = await _dbContext.Words
+            .Where(w => w.LanguageId == languageId)
+            .OrderByDescending(w => w.LearnedPercent)
+            .ToListAsync(token);
+
+        return wordEntities
+            .Select(w => new WordDto
+            {
+                Id = w.Id,
+                LanguageId = w.LanguageId,
+                Name = w.Name,
+                TranslatedName = w.TranslatedName,
+                LearnedPercent = w.LearnedPercent,
+                LastUpdated = w.LastUpdated
+            })
+            .ToList();
+    }
+
     public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, CancellationToken token, int top = 15)
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId && w.LearnedPercent < percentThreshold)
             .Take(top)
+            .OrderByDescending(w => w.LearnedPercent)
             .ToListAsync(token);
 
         return wordEntities
@@ -57,7 +78,9 @@ public class WordRepository : IWordRepository
         await _dbContext.Words.AddAsync(
             new Word
             {
-                Name = word.Name, TranslatedName = word.TranslatedName, LanguageId = languageId, LearnedPercent = 0,
+                Name = word.Name.ToLower(),
+                TranslatedName = word.TranslatedName.ToLower(),
+                LanguageId = languageId, LearnedPercent = 0,
                 LastUpdated = DateTime.UtcNow
             }, token);
 
@@ -71,8 +94,8 @@ public class WordRepository : IWordRepository
 
         if (word == null) throw new Exception();
 
-        word.Name = name;
-        word.TranslatedName = translationName;
+        word.Name = name.ToLower();
+        word.TranslatedName = translationName.ToLower();
 
         await _dbContext.SaveChangesAsync(token);
     }

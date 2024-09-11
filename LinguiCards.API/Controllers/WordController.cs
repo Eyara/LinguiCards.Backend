@@ -4,6 +4,7 @@ using LinguiCards.Application.Commands.Word.DeleteWordCommand;
 using LinguiCards.Application.Commands.Word.UpdateLearnLevelCommand;
 using LinguiCards.Application.Commands.Word.UpdateWordCommand;
 using LinguiCards.Application.Common.Models;
+using LinguiCards.Application.Queries.Word.GetAllWordsQuery;
 using LinguiCards.Application.Queries.Word.GetUnlearnedWordsQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -22,10 +23,18 @@ public class WordController : ControllerBase
     {
         _mediator = mediator;
     }
+    
+    [Route("/api/Language/{languageId}/Word")]
+    [HttpGet]
+    public async Task<List<WordDto>> GetAll(int languageId)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        return await _mediator.Send(new GetAllWordsQuery(languageId, username));
+    }
 
     [Route("unlearned")]
     [HttpGet]
-    public async Task<List<WordDto>> GetAll(int languageId)
+    public async Task<List<WordDto>> GetUnlearned(int languageId)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new GetUnlearnedWordsQuery(languageId, username));

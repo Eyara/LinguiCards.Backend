@@ -46,7 +46,7 @@ public class GetUserTokenQueryHandler : IRequestHandler<GetUserTokenQuery, strin
             {
                 new Claim(ClaimTypes.Name, username)
             }),
-            Expires = DateTime.UtcNow.AddMinutes(30),
+            Expires = DateTime.UtcNow.AddDays(3),
             Issuer = configuration["Jwt:Issuer"],
             Audience = configuration["Jwt:Audience"],
             SigningCredentials =
