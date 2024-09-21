@@ -7,6 +7,7 @@ public class Word
     public string TranslatedName { get; set; }
 
     public double LearnedPercent { get; set; }
+    public DateTime CreatedOn { get; set; }
     public DateTime? LastUpdated { get; set; }
 
     public int LanguageId { get; set; }

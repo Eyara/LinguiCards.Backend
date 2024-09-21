@@ -81,7 +81,8 @@ public class WordRepository : IWordRepository
                 Name = word.Name.ToLower(),
                 TranslatedName = word.TranslatedName.ToLower(),
                 LanguageId = languageId, LearnedPercent = 0,
-                LastUpdated = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow,
+                CreatedOn = DateTime.UtcNow
             }, token);
 
         await _dbContext.SaveChangesAsync(token);
