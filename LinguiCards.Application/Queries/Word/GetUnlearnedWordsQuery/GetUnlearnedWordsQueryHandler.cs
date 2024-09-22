@@ -3,6 +3,7 @@ using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Constants;
+using LinguiCards.Application.Helpers;
 using MediatR;
 
 namespace LinguiCards.Application.Queries.Word.GetUnlearnedWordsQuery;
@@ -12,6 +13,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     private readonly ILanguageRepository _languageRepository;
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
+
+    private const double DegradingRate = 0.3d;
 
     public GetUnlearnedWordsQueryHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
         IWordRepository wordRepository)
@@ -32,10 +35,26 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         if (languageEntity == null) throw new LanguageNotFoundException();
 
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
-
-        // TODO: add degrading of learn percent over time
-
-        return await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
+        
+        var unlearnedWords = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
             cancellationToken);
+        
+        // TODO: add method to WordRepo with range update learn level
+
+        foreach (var word in unlearnedWords)
+        {
+            if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
+            {
+                await _wordRepository.UpdateLearnLevel(
+                    word.Id,
+                    word.LearnedPercent - DegradingRate * (word.LastUpdated.Value - DateTime.Today).Days,
+                    cancellationToken);
+            }
+        }
+        
+        var result = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
+            cancellationToken);
+
+        return (List<WordDto>)result.Shuffle();
     }
 }
