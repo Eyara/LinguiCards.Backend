@@ -34,7 +34,7 @@ public class WordController : ControllerBase
 
     [Route("unlearned")]
     [HttpGet]
-    public async Task<List<WordDto>> GetUnlearned(int languageId)
+    public async Task<List<TrainingWord>> GetUnlearned(int languageId)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new GetUnlearnedWordsQuery(languageId, username));
