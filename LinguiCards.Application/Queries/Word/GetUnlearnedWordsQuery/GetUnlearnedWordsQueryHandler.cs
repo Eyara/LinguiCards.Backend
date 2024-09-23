@@ -104,6 +104,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         var result = allWords
             .Select(w => type == TrainingType.FromLearnLanguage ? w.TranslatedName : w.Name)
+            .Where(option => option != targetOption)
             .OrderBy(o => Guid.NewGuid())
             .Take(3)
             .ToList();

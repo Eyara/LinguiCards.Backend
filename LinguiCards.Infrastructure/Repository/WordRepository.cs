@@ -56,8 +56,8 @@ public class WordRepository : IWordRepository
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId && w.LearnedPercent < percentThreshold)
+            .OrderByDescending(w => Guid.NewGuid())
             .Take(top)
-            .OrderByDescending(w => w.LearnedPercent)
             .ToListAsync(token);
 
         return wordEntities
