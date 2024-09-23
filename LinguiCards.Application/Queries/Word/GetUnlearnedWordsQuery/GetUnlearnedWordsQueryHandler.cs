@@ -46,8 +46,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
             {
                 await _wordRepository.UpdateLearnLevel(
-                    word.Id,
-                    word.LearnedPercent - DegradingRate * (word.LastUpdated.Value - DateTime.Today).Days,
+                    word.Id, 
+                    Math.Round(word.LearnedPercent - DegradingRate * (word.LastUpdated.Value - DateTime.Today).Days, 2),
                     cancellationToken);
             }
         }

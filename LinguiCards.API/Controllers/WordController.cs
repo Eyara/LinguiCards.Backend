@@ -47,7 +47,14 @@ public class WordController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new AddWordCommand(model, languageId, username));
     }
-
+    
+    [Route("/api/Language/{languageId}/Words")]
+    [HttpPost]
+    public async Task<bool> Post(IEnumerable<WordDto> words, int languageId)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        return await _mediator.Send(new AddWordListCommand(words, languageId, username));
+    }
 
     [HttpPut]
     public async Task<bool> Put(int wordId, string name, string translationName)

@@ -80,12 +80,39 @@ public class WordRepository : IWordRepository
             {
                 Name = word.Name.ToLower(),
                 TranslatedName = word.TranslatedName.ToLower(),
-                LanguageId = languageId, LearnedPercent = 0,
+                LanguageId = languageId, 
+                LearnedPercent = 0,
                 LastUpdated = DateTime.UtcNow,
                 CreatedOn = DateTime.UtcNow
             }, token);
 
         await _dbContext.SaveChangesAsync(token);
+    }
+    
+    public async Task AddRangeAsync(IEnumerable<WordDto> words, int languageId, CancellationToken token)
+    {
+        using var transaction = await _dbContext.Database.BeginTransactionAsync(token);
+        try
+        {
+            var wordEntities = words.Select(word => new Word
+            {
+                Name = word.Name.ToLower(),
+                TranslatedName = word.TranslatedName.ToLower(),
+                LanguageId = languageId, 
+                LearnedPercent = 0,
+                LastUpdated = DateTime.UtcNow,
+                CreatedOn = DateTime.UtcNow
+            }).ToList();
+
+            await _dbContext.AddRangeAsync(wordEntities, token);
+            await _dbContext.SaveChangesAsync(token);
+            await transaction.CommitAsync(token);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(token);
+            throw new Exception("An error occurred while adding the word range", ex);
+        }
     }
 
     public async Task UpdateAsync(int wordId, string name, string translationName, CancellationToken token)
