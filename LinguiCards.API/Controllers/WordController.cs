@@ -1,10 +1,11 @@
 ﻿using System.Security.Claims;
 using LinguiCards.Application.Commands.Word.AddWordCommand;
+using LinguiCards.Application.Commands.Word.AddWordListCommand;
 using LinguiCards.Application.Commands.Word.DeleteWordCommand;
 using LinguiCards.Application.Commands.Word.UpdateLearnLevelCommand;
 using LinguiCards.Application.Commands.Word.UpdateWordCommand;
 using LinguiCards.Application.Common.Models;
-using LinguiCards.Application.Queries.Word.GetAllWordsQuery;
+using LinguiCards.Application.Queries.Word.GetAllWordsPaginatedQuery;
 using LinguiCards.Application.Queries.Word.GetUnlearnedWordsQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,13 +24,14 @@ public class WordController : ControllerBase
     {
         _mediator = mediator;
     }
-    
+
     [Route("/api/Language/{languageId}/Word")]
     [HttpGet]
-    public async Task<List<WordDto>> GetAll(int languageId)
+    public async Task<PaginatedResult<WordDto>> GetAllPaginated(int languageId, [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 15)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
-        return await _mediator.Send(new GetAllWordsQuery(languageId, username));
+        return await _mediator.Send(new GetAllWordsPaginatedQuery(languageId, username, pageNumber, pageSize));
     }
 
     [Route("unlearned")]
@@ -47,7 +49,7 @@ public class WordController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new AddWordCommand(model, languageId, username));
     }
-    
+
     [Route("/api/Language/{languageId}/Words")]
     [HttpPost]
     public async Task<bool> Post(IEnumerable<WordDto> words, int languageId)

@@ -1,5 +1,6 @@
 ﻿using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
+using LinguiCards.Application.Helpers;
 using LinguiCards.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,6 +52,51 @@ public class WordRepository : IWordRepository
             })
             .ToList();
     }
+
+    public async Task<PaginatedResult<WordDto>> GetAllPaginatedAsync(int languageId, int pageNumber, int pageSize)
+    {
+        return await _dbContext.Words
+            .Where(w => w.LanguageId == languageId)
+            .OrderByDescending(w => w.LearnedPercent)
+            .Select(w => new WordDto
+            {
+                Id = w.Id,
+                LanguageId = w.LanguageId,
+                Name = w.Name,
+                TranslatedName = w.TranslatedName,
+                LearnedPercent = w.LearnedPercent,
+                LastUpdated = w.LastUpdated
+            })
+            .ToPaginatedResultAsync(pageNumber, pageSize);
+    }
+
+    public async Task<List<WordExtendedDTO>> GetAllExtendedAsync(int languageId, CancellationToken token)
+    {
+        var wordEntities = await _dbContext.Words
+            .Where(w => w.LanguageId == languageId)
+            .OrderByDescending(w => w.LearnedPercent)
+            .Include(w => w.Histories)
+            .ToListAsync(token);
+
+        return wordEntities
+            .Select(w => new WordExtendedDTO
+            {
+                Id = w.Id,
+                LanguageId = w.LanguageId,
+                Name = w.Name,
+                TranslatedName = w.TranslatedName,
+                LearnedPercent = w.LearnedPercent,
+                LastUpdated = w.LastUpdated,
+                Histories = w.Histories.Select(h => new WordChangeHistoryDTO
+                {
+                    Id = h.Id,
+                    ChangedOn = h.ChangedOn,
+                    IsCorrectAnswer = h.IsCorrectAnswer
+                }).ToList()
+            })
+            .ToList();
+    }
+
 
     public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, CancellationToken token, int top = 15)
     {

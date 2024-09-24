@@ -11,3 +11,8 @@ public class WordDto
 
     public int LanguageId { get; set; }
 }
+
+public class WordExtendedDTO : WordDto
+{
+    public List<WordChangeHistoryDTO> Histories { get; set; }
+}

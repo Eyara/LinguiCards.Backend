@@ -3,7 +3,7 @@ using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
 using MediatR;
 
-namespace LinguiCards.Application.Commands.Word.AddWordCommand;
+namespace LinguiCards.Application.Commands.Word.AddWordListCommand;
 
 public class AddWordListCommandHandler : IRequestHandler<AddWordListCommand, bool>
 {

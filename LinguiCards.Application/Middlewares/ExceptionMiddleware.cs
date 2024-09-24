@@ -31,9 +31,13 @@ public class ExceptionMiddleware
         context.Response.ContentType = "application/json";
 
         var statusCode = (int)HttpStatusCode.InternalServerError;
-        var response = new { message = "An unexpected error occurred." };
+        var response = new { message = $"An unexpected error occurred. Message: {exception}" };
         switch (exception)
         {
+            case BadRequestException badRequestEx:
+                statusCode = (int)HttpStatusCode.BadRequest;
+                response = new { message = badRequestEx.Message };
+                break;
             case InvalidJwtTokenException jwtEx:
                 statusCode = (int)HttpStatusCode.Unauthorized;
                 response = new { message = jwtEx.Message };
