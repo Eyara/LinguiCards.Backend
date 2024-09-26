@@ -40,7 +40,27 @@ public class LanguageRepository : ILanguageRepository
 
         return new LanguageDto
         {
-            Id = languageEntity.Id, Name = languageEntity.Name, Url = languageEntity.LanguageDictionary.Url,
+            Id = languageEntity.Id, 
+            Name = languageEntity.Name,
+            Url = languageEntity.LanguageDictionary.Url,
+            UserId = languageEntity.UserId,
+            LanguageDictionaryId = languageEntity.LanguageDictionaryId
+        };
+    }
+
+    public async Task<LanguageDto> GetByNameAndUserAsync(string name, int userId, CancellationToken token)
+    {
+        var languageEntity = await _dbContext.Languages
+            .Include(l => l.LanguageDictionary)
+            .FirstOrDefaultAsync(l => l.Name == name && l.UserId == userId, token);
+
+        if (languageEntity == null) return null;
+
+        return new LanguageDto
+        {
+            Id = languageEntity.Id, 
+            Name = languageEntity.Name,
+            Url = languageEntity.LanguageDictionary.Url,
             UserId = languageEntity.UserId,
             LanguageDictionaryId = languageEntity.LanguageDictionaryId
         };
