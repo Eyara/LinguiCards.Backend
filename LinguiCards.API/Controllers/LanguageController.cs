@@ -4,6 +4,7 @@ using LinguiCards.Application.Commands.Language.DeleteLanguageCommand;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Queries.Language.GetAllLanguagesQuery;
 using LinguiCards.Application.Queries.LanguageDictionary.GetAllLanguageDictionariesQuery;
+using LinguiCards.Application.Queries.LanguageDictionary.GetAvailableLanguagesQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,14 @@ public class LanguageController : ControllerBase
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new GetAllLanguagesQuery(username));
+    }
+    
+    [Route("available")]
+    [HttpGet]
+    public async Task<List<LanguageDictionaryDto>> GetAvailable()
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        return await _mediator.Send(new GetAvailableLanguagesQuery(username));
     }
 
     [Route("dictionary")]

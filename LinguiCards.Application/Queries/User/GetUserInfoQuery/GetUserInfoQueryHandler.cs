@@ -58,7 +58,7 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
                 LanguageName = language.Name,
                 TotalWords = words.Count,
                 LearnedWords = learnedCount,
-                LearnedPercent = words.Count > 0 ? Math.Round(learnedCount / (double)words.Count, 2) : 0,
+                LearnedPercent = words.Count > 0 ? Math.Round(learnedCount / (double)words.Count * 100, 2) : 0,
                 TotalTrainingDays = trainingDays
             });
         }
