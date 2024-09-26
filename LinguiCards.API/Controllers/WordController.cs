@@ -65,7 +65,7 @@ public class WordController : ControllerBase
     }
 
     [Route("updateLearnLevel")]
-    [HttpPut]
+    [HttpPatch]
     public async Task<bool> UpdateLearnLevel(int wordId, bool wasSuccessful)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);

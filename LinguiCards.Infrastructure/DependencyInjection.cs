@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<ILanguageDictionaryRepository, LanguageDictionaryRepository>();
         services.AddScoped<IWordRepository, WordRepository>();
         services.AddScoped<IWordChangeHistoryRepository, WordChangeHistoryRepository>();
+        services.AddScoped<IDefaultCribRepository, DefaultCribRepository>();
 
         return services;
     }

@@ -22,6 +22,54 @@ namespace LinguiCards.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LinguiCards.Domain.Entities.CribDescription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CribId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Header")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CribDescriptions");
+                });
+
+            modelBuilder.Entity("LinguiCards.Domain.Entities.DefaultCrib", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LanguageId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LanguageId");
+
+                    b.ToTable("DefaultCribs");
+                });
+
             modelBuilder.Entity("LinguiCards.Domain.Entities.Language", b =>
                 {
                     b.Property<int>("Id")
@@ -152,6 +200,17 @@ namespace LinguiCards.Infrastructure.Migrations
                     b.HasIndex("WordId");
 
                     b.ToTable("WordChangeHistories");
+                });
+
+            modelBuilder.Entity("LinguiCards.Domain.Entities.DefaultCrib", b =>
+                {
+                    b.HasOne("LinguiCards.Domain.Entities.Language", "Language")
+                        .WithMany()
+                        .HasForeignKey("LanguageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Language");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.Language", b =>
