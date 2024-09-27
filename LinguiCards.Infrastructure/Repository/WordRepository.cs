@@ -33,6 +33,24 @@ public class WordRepository : IWordRepository
         };
     }
 
+    public async Task<WordDto> GetByNameAndLanguageIdAsync(int languageId, string name, CancellationToken token)
+    {
+        var wordEntity = await _dbContext.Words
+            .FirstOrDefaultAsync(l => l.LanguageId == languageId && l.Name == name, token);
+
+        if (wordEntity == null) return null;
+
+        return new WordDto
+        {
+            Id = wordEntity.Id,
+            LanguageId = wordEntity.LanguageId,
+            Name = wordEntity.Name,
+            TranslatedName = wordEntity.TranslatedName,
+            LearnedPercent = wordEntity.LearnedPercent,
+            LastUpdated = wordEntity.LastUpdated
+        };
+    }
+
     public async Task<List<WordDto>> GetAllAsync(int languageId, CancellationToken token)
     {
         var wordEntities = await _dbContext.Words

@@ -29,7 +29,13 @@ public class AddWordListCommandHandler : IRequestHandler<AddWordListCommand, boo
 
         if (language.UserId != user.Id) throw new EntityOwnershipException();
 
-        await _wordRepository.AddRangeAsync(request.Words, request.LanguageId, cancellationToken);
+        var currentWords = await _wordRepository.GetAllAsync(request.LanguageId, cancellationToken);
+
+        var wordsToAdd = request.Words.ToList();
+
+        wordsToAdd.RemoveAll(w => currentWords.Any(cw => cw.Name == w.Name));
+
+        await _wordRepository.AddRangeAsync(wordsToAdd, request.LanguageId, cancellationToken);
 
         return true;
     }
