@@ -65,11 +65,9 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         var count = words.Count;
         var result = new List<TrainingWord>();
 
-        // TODO: add smart split system for different types of training
-
         for (var i = 0; i < count; i++)
         {
-            var type = i < count / 2 ? TrainingType.FromLearnLanguage : TrainingType.FromNativeLanguage;
+            var type = GetTrainingType(i, count);
             var options = await GetTrainingOptions(
                 type == TrainingType.FromLearnLanguage ? words[i].TranslatedName : words[i].Name,
                 words[i].LanguageId,
@@ -103,7 +101,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         }
 
         var result = allWords
-            .Select(w => type == TrainingType.FromLearnLanguage ? w.TranslatedName : w.Name)
+            .Select(w => type == TrainingType.FromLearnLanguage || type == TrainingType.WritingFromLearnLanguage ? w.TranslatedName : w.Name)
             .Where(option => option != targetOption)
             .OrderBy(o => Guid.NewGuid())
             .Take(3)
@@ -111,5 +109,25 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         
         result.Add(targetOption);
         return (List<string>)result.Shuffle();
+    }
+
+    private TrainingType GetTrainingType(int i, int count)
+    {
+        if (i < count / 3)
+        {
+            return TrainingType.FromLearnLanguage;
+        }
+    
+        if (i < count * 2 / 3)
+        {
+            return TrainingType.FromNativeLanguage;
+        }
+    
+        if (i < count * 4 / 5)
+        {
+            return TrainingType.WritingFromLearnLanguage;
+        }
+
+        return TrainingType.WritingFromNativeLanguage;
     }
 }

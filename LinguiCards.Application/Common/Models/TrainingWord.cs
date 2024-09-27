@@ -10,6 +10,7 @@ public enum TrainingType
 {
     FromLearnLanguage = 0,
     FromNativeLanguage,
-    Writing,
+    WritingFromLearnLanguage,
+    WritingFromNativeLanguage,
     Sentence
 }
