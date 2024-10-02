@@ -19,7 +19,7 @@ public class DefaultCribRepository : IDefaultCribRepository
         var result = await (from cr in _dbContext.DefaultCribs
                 join cd in _dbContext.CribDescriptions
                     on cr.Id equals cd.CribId
-                where cd.Type == 0 
+                where cd.Type == 0 && cr.LanguageId == languageId
                 select new 
                 {
                     CribId = cr.Id,
