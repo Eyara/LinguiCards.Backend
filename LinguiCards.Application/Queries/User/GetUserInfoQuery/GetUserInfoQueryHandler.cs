@@ -49,7 +49,7 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
         foreach (var language in userLanguages)
         {
             var words = await _wordRepository.GetAllExtendedAsync(language.Id, cancellationToken);
-            var learnedCount = words.Count(w => w.LearnedPercent > LearningSettings.LearnThreshold);
+            var learnedCount = words.Count(w => w.PassiveLearnedPercent > LearningSettings.LearnThreshold);
             var trainingDays = words
                 .SelectMany(w => w.Histories)
                 .Select(h => h.ChangedOn.Date)

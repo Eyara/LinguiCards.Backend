@@ -28,7 +28,8 @@ public class WordRepository : IWordRepository
             LanguageId = wordEntity.LanguageId,
             Name = wordEntity.Name,
             TranslatedName = wordEntity.TranslatedName,
-            LearnedPercent = wordEntity.LearnedPercent,
+            PassiveLearnedPercent = wordEntity.PassiveLearnedPercent,
+            ActiveLearnedPercent = wordEntity.ActiveLearnedPercent,
             LastUpdated = wordEntity.LastUpdated
         };
     }
@@ -46,7 +47,8 @@ public class WordRepository : IWordRepository
             LanguageId = wordEntity.LanguageId,
             Name = wordEntity.Name,
             TranslatedName = wordEntity.TranslatedName,
-            LearnedPercent = wordEntity.LearnedPercent,
+            PassiveLearnedPercent = wordEntity.PassiveLearnedPercent,
+            ActiveLearnedPercent = wordEntity.ActiveLearnedPercent,
             LastUpdated = wordEntity.LastUpdated
         };
     }
@@ -55,7 +57,7 @@ public class WordRepository : IWordRepository
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
-            .OrderByDescending(w => w.LearnedPercent)
+            .OrderByDescending(w => w.PassiveLearnedPercent)
             .ToListAsync(token);
 
         return wordEntities
@@ -65,7 +67,8 @@ public class WordRepository : IWordRepository
                 LanguageId = w.LanguageId,
                 Name = w.Name,
                 TranslatedName = w.TranslatedName,
-                LearnedPercent = w.LearnedPercent,
+                PassiveLearnedPercent = w.PassiveLearnedPercent,
+                ActiveLearnedPercent = w.ActiveLearnedPercent,
                 LastUpdated = w.LastUpdated
             })
             .ToList();
@@ -75,14 +78,15 @@ public class WordRepository : IWordRepository
     {
         return await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
-            .OrderByDescending(w => w.LearnedPercent)
+            .OrderByDescending(w => w.PassiveLearnedPercent)
             .Select(w => new WordDto
             {
                 Id = w.Id,
                 LanguageId = w.LanguageId,
                 Name = w.Name,
                 TranslatedName = w.TranslatedName,
-                LearnedPercent = w.LearnedPercent,
+                PassiveLearnedPercent = w.PassiveLearnedPercent,
+                ActiveLearnedPercent = w.ActiveLearnedPercent,
                 LastUpdated = w.LastUpdated
             })
             .ToPaginatedResultAsync(pageNumber, pageSize);
@@ -92,7 +96,7 @@ public class WordRepository : IWordRepository
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
-            .OrderByDescending(w => w.LearnedPercent)
+            .OrderByDescending(w => w.PassiveLearnedPercent)
             .Include(w => w.Histories)
             .ToListAsync(token);
 
@@ -103,7 +107,8 @@ public class WordRepository : IWordRepository
                 LanguageId = w.LanguageId,
                 Name = w.Name,
                 TranslatedName = w.TranslatedName,
-                LearnedPercent = w.LearnedPercent,
+                PassiveLearnedPercent = w.PassiveLearnedPercent,
+                ActiveLearnedPercent = w.ActiveLearnedPercent,
                 LastUpdated = w.LastUpdated,
                 Histories = w.Histories.Select(h => new WordChangeHistoryDTO
                 {
@@ -116,10 +121,15 @@ public class WordRepository : IWordRepository
     }
 
 
-    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, CancellationToken token, int top = 15)
+    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, VocabularyType type, CancellationToken token, int top = 15)
     {
-        var wordEntities = await _dbContext.Words
-            .Where(w => w.LanguageId == languageId && w.LearnedPercent < percentThreshold)
+        var wordsQuery = type == VocabularyType.Passive
+            ? _dbContext.Words
+                .Where(w => w.LanguageId == languageId && w.PassiveLearnedPercent < percentThreshold)
+            : _dbContext.Words
+                .Where(w => w.LanguageId == languageId && w.ActiveLearnedPercent < percentThreshold);
+        
+        var wordEntities = await wordsQuery
             .OrderByDescending(w => Guid.NewGuid())
             .Take(top)
             .ToListAsync(token);
@@ -131,7 +141,8 @@ public class WordRepository : IWordRepository
                 LanguageId = w.LanguageId,
                 Name = w.Name,
                 TranslatedName = w.TranslatedName,
-                LearnedPercent = w.LearnedPercent,
+                PassiveLearnedPercent = w.PassiveLearnedPercent,
+                ActiveLearnedPercent = w.ActiveLearnedPercent,
                 LastUpdated = w.LastUpdated
             })
             .ToList();
@@ -145,7 +156,8 @@ public class WordRepository : IWordRepository
                 Name = word.Name.ToLower(),
                 TranslatedName = word.TranslatedName.ToLower(),
                 LanguageId = languageId, 
-                LearnedPercent = 0,
+                PassiveLearnedPercent = 0,
+                ActiveLearnedPercent = 0,
                 LastUpdated = DateTime.UtcNow,
                 CreatedOn = DateTime.UtcNow
             }, token);
@@ -163,7 +175,8 @@ public class WordRepository : IWordRepository
                 Name = word.Name.ToLower(),
                 TranslatedName = word.TranslatedName.ToLower(),
                 LanguageId = languageId, 
-                LearnedPercent = 0,
+                PassiveLearnedPercent = 0,
+                ActiveLearnedPercent = 0,
                 LastUpdated = DateTime.UtcNow,
                 CreatedOn = DateTime.UtcNow
             }).ToList();
@@ -192,14 +205,27 @@ public class WordRepository : IWordRepository
         await _dbContext.SaveChangesAsync(token);
     }
 
-    public async Task UpdateLearnLevel(int wordId, double percent, CancellationToken token)
+    public async Task UpdatePassiveLearnLevel(int wordId, double passivePercent, CancellationToken token)
     {
         var word = await _dbContext.Words
             .FirstOrDefaultAsync(w => w.Id == wordId, token);
 
         if (word == null) throw new Exception();
 
-        word.LearnedPercent = percent;
+        word.PassiveLearnedPercent = passivePercent;
+        word.LastUpdated = DateTime.UtcNow;
+        ;
+        await _dbContext.SaveChangesAsync(token);
+    }
+    
+    public async Task UpdateActiveLearnLevel(int wordId, double activePercent, CancellationToken token)
+    {
+        var word = await _dbContext.Words
+            .FirstOrDefaultAsync(w => w.Id == wordId, token);
+
+        if (word == null) throw new Exception();
+
+        word.PassiveLearnedPercent = activePercent;
         word.LastUpdated = DateTime.UtcNow;
         ;
         await _dbContext.SaveChangesAsync(token);

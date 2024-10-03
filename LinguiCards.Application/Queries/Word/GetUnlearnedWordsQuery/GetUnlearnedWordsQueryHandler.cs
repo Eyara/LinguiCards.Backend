@@ -14,8 +14,6 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
 
-    private const double DegradingRate = 0.3d;
-
     public GetUnlearnedWordsQueryHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
         IWordRepository wordRepository)
     {
@@ -36,50 +34,82 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
-        var unlearnedWords = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
-            cancellationToken);
+        var unlearnedPassiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
+            LearningSettings.LearnThreshold, VocabularyType.Passive,
+            cancellationToken, 8);
+
+        var unlearnedActiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
+            LearningSettings.LearnThreshold, VocabularyType.Passive,
+            cancellationToken, 8);
 
         // TODO: add method to WordRepo with range update learn level
 
-        foreach (var word in unlearnedWords)
+        foreach (var word in unlearnedPassiveWords)
         {
             if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
             {
-                await _wordRepository.UpdateLearnLevel(
+                await _wordRepository.UpdatePassiveLearnLevel(
                     word.Id,
-                    Math.Round(word.LearnedPercent - DegradingRate * (word.LastUpdated.Value - DateTime.Today).Days, 2),
+                    Math.Round(
+                        word.PassiveLearnedPercent - LearningSettings.DayWeight * (word.LastUpdated.Value - DateTime.Today).Days, 2),
                     cancellationToken);
             }
         }
 
-        var result = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
+        foreach (var word in unlearnedActiveWords)
+        {
+            if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
+            {
+                await _wordRepository.UpdateActiveLearnLevel(
+                    word.Id,
+                    Math.Round(
+                        word.ActiveLearnedPercent - LearningSettings.DayWeight * (word.LastUpdated.Value - DateTime.Today).Days, 2),
+                    cancellationToken);
+            }
+        }
+
+        var resultPassive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
+            VocabularyType.Passive,
             cancellationToken);
 
-        var words = (List<WordDto>)result.Shuffle();
+        var resultActive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
+            VocabularyType.Active,
+            cancellationToken);
 
-        return await GetTrainingWords(words, cancellationToken);
+        var result = new List<TrainingWord>();
+
+        var trainingWordsPassive = await GetTrainingWords(resultPassive, VocabularyType.Passive, cancellationToken);
+        var trainingWordsActive = await GetTrainingWords(resultActive, VocabularyType.Active, cancellationToken);
+
+        result.AddRange(trainingWordsPassive);
+        result.AddRange(trainingWordsActive);
+
+        return result;
     }
 
-    private async Task<List<TrainingWord>> GetTrainingWords(List<WordDto> words, CancellationToken token)
+    private async Task<List<TrainingWord>> GetTrainingWords(List<WordDto> words, VocabularyType vocabularyType,
+        CancellationToken token)
     {
         var count = words.Count;
         var result = new List<TrainingWord>();
 
         for (var i = 0; i < count; i++)
         {
-            var type = GetTrainingType(i, count);
-            var options = await GetTrainingOptions(
-                type == TrainingType.FromLearnLanguage ? words[i].TranslatedName : words[i].Name,
-                words[i].LanguageId,
-                type,
-                token);
+            var type = GetTrainingType(i, count, vocabularyType);
+            var options = vocabularyType == VocabularyType.Passive
+                ? await GetTrainingOptions(
+                    type == TrainingType.FromLearnLanguage ? words[i].TranslatedName : words[i].Name,
+                    words[i].LanguageId,
+                    type,
+                    token)
+                : null;
 
             result.Add(new TrainingWord
             {
                 Id = words[i].Id,
                 LanguageId = words[i].LanguageId,
                 LastUpdated = words[i].LastUpdated,
-                LearnedPercent = words[i].LearnedPercent,
+                PassiveLearnedPercent = words[i].PassiveLearnedPercent,
                 Name = words[i].Name,
                 TranslatedName = words[i].TranslatedName,
                 Type = type,
@@ -101,33 +131,26 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         }
 
         var result = allWords
-            .Select(w => type == TrainingType.FromLearnLanguage || type == TrainingType.WritingFromLearnLanguage ? w.TranslatedName : w.Name)
+            .Select(w =>
+                type == TrainingType.FromLearnLanguage || type == TrainingType.WritingFromLearnLanguage
+                    ? w.TranslatedName
+                    : w.Name)
             .Where(option => option != targetOption)
             .OrderBy(o => Guid.NewGuid())
             .Take(3)
             .ToList();
-        
+
         result.Add(targetOption);
         return (List<string>)result.Shuffle();
     }
 
-    private TrainingType GetTrainingType(int i, int count)
+    private TrainingType GetTrainingType(int i, int count, VocabularyType vocabularyType)
     {
-        if (i < count / 3)
+        if (vocabularyType == VocabularyType.Passive)
         {
-            return TrainingType.FromLearnLanguage;
-        }
-    
-        if (i < count * 2 / 3)
-        {
-            return TrainingType.FromNativeLanguage;
-        }
-    
-        if (i < count * 4 / 5)
-        {
-            return TrainingType.WritingFromLearnLanguage;
+            return i < count / 2 ? TrainingType.FromLearnLanguage : TrainingType.FromNativeLanguage;
         }
 
-        return TrainingType.WritingFromNativeLanguage;
+        return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
     }
 }

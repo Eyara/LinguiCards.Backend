@@ -40,10 +40,10 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
         var newLevelPercent = request.WasSuccessful
-            ? wordEntity.LearnedPercent + LearningSettings.LearnStep
-            : wordEntity.LearnedPercent - LearningSettings.LearnStep;
+            ? wordEntity.PassiveLearnedPercent + LearningSettings.LearnStep
+            : wordEntity.PassiveLearnedPercent - LearningSettings.LearnStep;
 
-        await _wordRepository.UpdateLearnLevel(request.WordId, newLevelPercent >= 0 ? newLevelPercent : 0,
+        await _wordRepository.UpdatePassiveLearnLevel(request.WordId, newLevelPercent >= 0 ? newLevelPercent : 0,
             cancellationToken);
 
         await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful, cancellationToken);
