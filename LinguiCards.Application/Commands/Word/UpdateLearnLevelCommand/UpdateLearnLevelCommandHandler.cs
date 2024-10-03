@@ -2,6 +2,7 @@
 using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Constants;
+using LinguiCards.Application.Helpers;
 using MediatR;
 
 namespace LinguiCards.Application.Commands.Word.UpdateLearnLevelCommand;
@@ -47,6 +48,24 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 
         await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful, cancellationToken);
         
+        await UpdateXpLevel(user, request.WasSuccessful, cancellationToken);
+        
         return true;
+    }
+
+    private async Task UpdateXpLevel(Domain.Entities.User user, bool isSuccess, CancellationToken token)
+    {
+        var requiredXp = CalculatorXP.CalculateXpRequired(user.Level);
+
+        var newXp = user.XP + (isSuccess ? LearningSettings.SuccessXpStep : LearningSettings.FailXpStep);
+        var newLevel = user.Level;
+
+        if (newXp >= requiredXp)
+        {
+            newLevel++;
+            newXp -= requiredXp;
+        }
+        
+        await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
     }
 }

@@ -29,17 +29,20 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
 
     public async Task<UserInfo> Handle(GetUserInfoQuery request, CancellationToken cancellationToken)
     {
-        var info = new UserInfo
-        {
-            LanguageStats = new List<LanguageStat>()
-        };
-
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 
         if (user == null)
         {
             throw new UserNotFoundException();
         }
+
+
+        var info = new UserInfo
+        {
+            XP = user.XP,
+            Level = user.Level,
+            LanguageStats = new List<LanguageStat>()
+        };
 
         var userLanguages = await _languageRepository.GetAllAsync(user.Id, cancellationToken);
 
@@ -52,7 +55,7 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
                 .Select(h => h.ChangedOn.Date)
                 .GroupBy(d => d.Date)
                 .Count();
-            
+
             info.LanguageStats.Add(new LanguageStat
             {
                 LanguageName = language.Name,

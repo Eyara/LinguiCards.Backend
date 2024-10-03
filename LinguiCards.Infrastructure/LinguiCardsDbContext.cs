@@ -26,6 +26,10 @@ public class LinguiCardsDbContext : DbContext
             .Property(u => u.Id)
             .ValueGeneratedOnAdd();
 
+        modelBuilder.Entity<User>()
+            .Property(u => u.Level)
+            .HasDefaultValue(1);
+
         modelBuilder.Entity<Language>()
             .HasKey(l => l.Id);
 

@@ -2,6 +2,8 @@
 
 public class UserInfo
 {
+    public int Level { get; set; }
+    public double XP { get; set; }
     public List<LanguageStat> LanguageStats { get; set; }
 }
 
