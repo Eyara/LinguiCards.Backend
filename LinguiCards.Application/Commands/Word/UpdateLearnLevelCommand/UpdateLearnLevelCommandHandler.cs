@@ -1,6 +1,7 @@
 ﻿using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
+using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Constants;
 using LinguiCards.Application.Helpers;
 using MediatR;
@@ -39,17 +40,35 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
+        var vocabularyType = TrainingToVocabulary.GetVocabularyType(request.TrainingType);
+
+        var isActive = vocabularyType == VocabularyType.Active;
+
+        var learnedPercent = isActive ? wordEntity.ActiveLearnedPercent : wordEntity.PassiveLearnedPercent;
+
         var newLevelPercent = request.WasSuccessful
-            ? wordEntity.PassiveLearnedPercent + LearningSettings.LearnStep
-            : wordEntity.PassiveLearnedPercent - LearningSettings.LearnStep;
+            ? learnedPercent + LearningSettings.LearnStep
+            : learnedPercent - LearningSettings.LearnStep;
 
-        await _wordRepository.UpdatePassiveLearnLevel(request.WordId, newLevelPercent >= 0 ? newLevelPercent : 0,
-            cancellationToken);
+        newLevelPercent = Math.Max(newLevelPercent, 0);
 
-        await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful, cancellationToken);
-        
+        if (isActive)
+        {
+            await _wordRepository.UpdateActiveLearnLevel(request.WordId, newLevelPercent,
+                cancellationToken);
+        }
+        else
+        {
+            await _wordRepository.UpdatePassiveLearnLevel(request.WordId, newLevelPercent,
+                cancellationToken);
+        }
+
+        await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful,
+            (int)vocabularyType,
+            wordEntity.PassiveLearnedPercent, wordEntity.ActiveLearnedPercent, cancellationToken);
+
         await UpdateXpLevel(user, request.WasSuccessful, cancellationToken);
-        
+
         return true;
     }
 
@@ -65,7 +84,7 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
             newLevel++;
             newXp -= requiredXp;
         }
-        
+
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
     }
 }

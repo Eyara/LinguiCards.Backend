@@ -12,13 +12,17 @@ public class WordChangeHistoryRepository : IWordChangeHistoryRepository
         _dbContext = dbContext;
     }
 
-    public async Task AddAsync(int wordId, bool isCorrectAnswer, CancellationToken token)
+    public async Task AddAsync(int wordId, bool isCorrectAnswer, int type, double passiveLearned, double activeLearned,
+        CancellationToken token)
     {
         await _dbContext.WordChangeHistories.AddAsync(
             new WordChangeHistory
             {
                 ChangedOn = DateTime.UtcNow,
                 IsCorrectAnswer = isCorrectAnswer,
+                VocabularyType = type,
+                PassiveLearned = passiveLearned,
+                ActiveLearned = activeLearned,
                 WordId = wordId
             }
         );

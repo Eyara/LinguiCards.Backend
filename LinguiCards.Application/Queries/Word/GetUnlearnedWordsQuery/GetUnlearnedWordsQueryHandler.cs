@@ -44,29 +44,19 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         // TODO: add method to WordRepo with range update learn level
 
-        foreach (var word in unlearnedPassiveWords)
-        {
-            if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
-            {
-                await _wordRepository.UpdatePassiveLearnLevel(
-                    word.Id,
-                    Math.Round(
-                        word.PassiveLearnedPercent - LearningSettings.DayWeight * (word.LastUpdated.Value - DateTime.Today).Days, 2),
-                    cancellationToken);
-            }
-        }
+        await UpdateLearnLevel(
+            unlearnedPassiveWords,
+            word => word.PassiveLearnedPercent,
+            _wordRepository.UpdatePassiveLearnLevel,
+            cancellationToken
+        );
 
-        foreach (var word in unlearnedActiveWords)
-        {
-            if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
-            {
-                await _wordRepository.UpdateActiveLearnLevel(
-                    word.Id,
-                    Math.Round(
-                        word.ActiveLearnedPercent - LearningSettings.DayWeight * (word.LastUpdated.Value - DateTime.Today).Days, 2),
-                    cancellationToken);
-            }
-        }
+        await UpdateLearnLevel(
+            unlearnedActiveWords,
+            word => word.ActiveLearnedPercent,
+            _wordRepository.UpdateActiveLearnLevel,
+            cancellationToken
+        );
 
         var resultPassive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
             VocabularyType.Passive,
@@ -152,5 +142,20 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         }
 
         return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
+    }
+    
+    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, Func<WordDto, double> getLearnedPercent, 
+        Func<int, double, CancellationToken, Task> updateLearnLevel, CancellationToken cancellationToken)
+    {
+        foreach (var word in words)
+        {
+            if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
+            {
+                var daysDifference = (DateTime.Today - word.LastUpdated.Value).Days;
+                var newLearnedPercent = Math.Round(getLearnedPercent(word) - LearningSettings.DayWeight * daysDifference, 2);
+
+                await updateLearnLevel(word.Id, newLearnedPercent, cancellationToken);
+            }
+        }
     }
 }
