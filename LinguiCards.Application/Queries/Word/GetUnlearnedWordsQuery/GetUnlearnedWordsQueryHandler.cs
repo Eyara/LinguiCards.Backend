@@ -39,7 +39,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             cancellationToken, 8);
 
         var unlearnedActiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
-            LearningSettings.LearnThreshold, VocabularyType.Passive,
+            LearningSettings.LearnThreshold, VocabularyType.Active,
             cancellationToken, 8);
 
         // TODO: add method to WordRepo with range update learn level
