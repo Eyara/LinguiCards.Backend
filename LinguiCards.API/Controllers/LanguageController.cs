@@ -3,6 +3,7 @@ using LinguiCards.Application.Commands.Language.AddLanguageCommand;
 using LinguiCards.Application.Commands.Language.DeleteLanguageCommand;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Queries.Language.GetAllLanguagesQuery;
+using LinguiCards.Application.Queries.Language.GetLanguageStatsQuery;
 using LinguiCards.Application.Queries.LanguageDictionary.GetAllLanguageDictionariesQuery;
 using LinguiCards.Application.Queries.LanguageDictionary.GetAvailableLanguagesQuery;
 using MediatR;
@@ -44,6 +45,14 @@ public class LanguageController : ControllerBase
     public async Task<List<LanguageDictionaryDto>> GetDictionary()
     {
         return await _mediator.Send(new GetAllLanguageDictionariesQuery());
+    }
+    
+    [Route("stats")]
+    [HttpGet]
+    public async Task<LanguageDashboardStat> GetStats([FromQuery] int languageId)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        return await _mediator.Send(new GetLanguageStatsQuery(username, languageId));
     }
 
     [HttpPost]

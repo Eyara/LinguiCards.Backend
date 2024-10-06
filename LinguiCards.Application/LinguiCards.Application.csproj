@@ -19,7 +19,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Common\Models\LanguageStat.cs" />
       <Compile Remove="Common\Models\LanguageAddDto.cs" />
     </ItemGroup>
 

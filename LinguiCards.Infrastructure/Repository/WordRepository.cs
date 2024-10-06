@@ -114,7 +114,10 @@ public class WordRepository : IWordRepository
                 {
                     Id = h.Id,
                     ChangedOn = h.ChangedOn,
-                    IsCorrectAnswer = h.IsCorrectAnswer
+                    IsCorrectAnswer = h.IsCorrectAnswer,
+                    PassiveLearned = h.PassiveLearned,
+                    VocabularyType = h.VocabularyType,
+                    ActiveLearned = h.ActiveLearned
                 }).ToList()
             })
             .ToList();
