@@ -57,7 +57,8 @@ public class WordRepository : IWordRepository
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
-            .OrderByDescending(w => w.PassiveLearnedPercent)
+            .OrderByDescending(w => w.ActiveLearnedPercent)
+            .ThenByDescending(w => w.PassiveLearnedPercent)
             .ToListAsync(token);
 
         return wordEntities
@@ -78,7 +79,8 @@ public class WordRepository : IWordRepository
     {
         return await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
-            .OrderByDescending(w => w.PassiveLearnedPercent)
+            .OrderByDescending(w => w.ActiveLearnedPercent)
+            .ThenByDescending(w => w.PassiveLearnedPercent)
             .Select(w => new WordDto
             {
                 Id = w.Id,
@@ -96,7 +98,8 @@ public class WordRepository : IWordRepository
     {
         var wordEntities = await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
-            .OrderByDescending(w => w.PassiveLearnedPercent)
+            .OrderByDescending(w => w.ActiveLearnedPercent)
+            .ThenByDescending(w => w.PassiveLearnedPercent)
             .Include(w => w.Histories)
             .ToListAsync(token);
 
@@ -228,7 +231,7 @@ public class WordRepository : IWordRepository
 
         if (word == null) throw new Exception();
 
-        word.PassiveLearnedPercent = activePercent;
+        word.ActiveLearnedPercent = activePercent;
         word.LastUpdated = DateTime.UtcNow;
         ;
         await _dbContext.SaveChangesAsync(token);

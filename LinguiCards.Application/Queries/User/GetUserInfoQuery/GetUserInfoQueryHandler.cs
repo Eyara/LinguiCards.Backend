@@ -39,7 +39,8 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
 
         var info = new UserInfo
         {
-            XP = user.XP,
+            Xp = user.XP,
+            XpToNextLevel = CalculatorXP.CalculateXpRequired(user.Level),
             Level = user.Level,
             LanguageStats = new List<LanguageStat>()
         };

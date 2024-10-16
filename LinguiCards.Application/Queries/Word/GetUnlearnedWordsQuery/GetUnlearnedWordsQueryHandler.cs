@@ -36,11 +36,11 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         var unlearnedPassiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
             LearningSettings.LearnThreshold, VocabularyType.Passive,
-            cancellationToken, 8);
+            cancellationToken);
 
         var unlearnedActiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
             LearningSettings.LearnThreshold, VocabularyType.Active,
-            cancellationToken, 8);
+            cancellationToken);
 
         // TODO: add method to WordRepo with range update learn level
 
@@ -60,11 +60,11 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         var resultPassive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
             VocabularyType.Passive,
-            cancellationToken);
+            cancellationToken, 8);
 
         var resultActive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
             VocabularyType.Active,
-            cancellationToken);
+            cancellationToken, 8);
 
         var result = new List<TrainingWord>();
 
@@ -152,7 +152,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
             {
                 var daysDifference = (DateTime.Today - word.LastUpdated.Value).Days;
-                var newLearnedPercent = Math.Round(getLearnedPercent(word) - LearningSettings.DayWeight * daysDifference, 2);
+                var newLearnedPercent = Math.Max(Math.Round(getLearnedPercent(word) - LearningSettings.DayWeight * daysDifference, 2), 0);
 
                 await updateLearnLevel(word.Id, newLearnedPercent, cancellationToken);
             }
