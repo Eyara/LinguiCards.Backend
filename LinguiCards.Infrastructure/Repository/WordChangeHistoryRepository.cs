@@ -13,7 +13,7 @@ public class WordChangeHistoryRepository : IWordChangeHistoryRepository
     }
 
     public async Task AddAsync(int wordId, bool isCorrectAnswer, int type, double passiveLearned, double activeLearned,
-        CancellationToken token)
+        Guid? trainingId, string? answer, CancellationToken token)
     {
         await _dbContext.WordChangeHistories.AddAsync(
             new WordChangeHistory
@@ -23,7 +23,9 @@ public class WordChangeHistoryRepository : IWordChangeHistoryRepository
                 VocabularyType = type,
                 PassiveLearned = passiveLearned,
                 ActiveLearned = activeLearned,
-                WordId = wordId
+                WordId = wordId,
+                TrainingId = trainingId,
+                Answer = answer
             }
         );
         await _dbContext.SaveChangesAsync(token);

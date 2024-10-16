@@ -64,8 +64,8 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         }
 
         await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful,
-            (int)vocabularyType,
-            wordEntity.PassiveLearnedPercent, wordEntity.ActiveLearnedPercent, cancellationToken);
+            (int)vocabularyType, wordEntity.PassiveLearnedPercent, wordEntity.ActiveLearnedPercent,
+            request.TrainingId, request.Answer, cancellationToken);
 
         await UpdateXpLevel(user, request.WasSuccessful, cancellationToken);
 

@@ -200,6 +200,9 @@ namespace LinguiCards.Infrastructure.Migrations
                     b.Property<double>("ActiveLearned")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("Answer")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("ChangedOn")
                         .HasColumnType("timestamp with time zone");
 
@@ -208,6 +211,9 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.Property<double>("PassiveLearned")
                         .HasColumnType("double precision");
+
+                    b.Property<Guid?>("TrainingId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("VocabularyType")
                         .HasColumnType("integer");

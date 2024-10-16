@@ -68,8 +68,12 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         var result = new List<TrainingWord>();
 
-        var trainingWordsPassive = await GetTrainingWords(resultPassive, VocabularyType.Passive, cancellationToken);
-        var trainingWordsActive = await GetTrainingWords(resultActive, VocabularyType.Active, cancellationToken);
+        var trainingId = Guid.NewGuid();
+
+        var trainingWordsPassive =
+            await GetTrainingWords(resultPassive, VocabularyType.Passive, trainingId, cancellationToken);
+        var trainingWordsActive =
+            await GetTrainingWords(resultActive, VocabularyType.Active, trainingId, cancellationToken);
 
         result.AddRange(trainingWordsPassive);
         result.AddRange(trainingWordsActive);
@@ -78,6 +82,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     }
 
     private async Task<List<TrainingWord>> GetTrainingWords(List<WordDto> words, VocabularyType vocabularyType,
+        Guid trainingId,
         CancellationToken token)
     {
         var count = words.Count;
@@ -103,7 +108,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                 Name = words[i].Name,
                 TranslatedName = words[i].TranslatedName,
                 Type = type,
-                Options = options
+                Options = options,
+                TrainingId = trainingId
             });
         }
 
@@ -143,8 +149,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
     }
-    
-    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, Func<WordDto, double> getLearnedPercent, 
+
+    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, Func<WordDto, double> getLearnedPercent,
         Func<int, double, CancellationToken, Task> updateLearnLevel, CancellationToken cancellationToken)
     {
         foreach (var word in words)
@@ -152,7 +158,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
             {
                 var daysDifference = (DateTime.Today - word.LastUpdated.Value).Days;
-                var newLearnedPercent = Math.Max(Math.Round(getLearnedPercent(word) - LearningSettings.DayWeight * daysDifference, 2), 0);
+                var newLearnedPercent =
+                    Math.Max(Math.Round(getLearnedPercent(word) - LearningSettings.DayWeight * daysDifference, 2), 0);
 
                 await updateLearnLevel(word.Id, newLearnedPercent, cancellationToken);
             }

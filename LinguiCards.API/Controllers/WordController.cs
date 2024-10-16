@@ -66,10 +66,12 @@ public class WordController : ControllerBase
 
     [Route("updateLearnLevel")]
     [HttpPatch]
-    public async Task<bool> UpdateLearnLevel(int wordId, TrainingType trainingType, bool wasSuccessful)
+    public async Task<bool> UpdateLearnLevel(int wordId, TrainingType trainingType, bool wasSuccessful,
+        Guid? trainingTd, string? answer)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
-        return await _mediator.Send(new UpdateLearnLevelCommand(wordId, trainingType, wasSuccessful, username));
+        return await _mediator.Send(new UpdateLearnLevelCommand(wordId, trainingType, wasSuccessful, trainingTd, answer,
+            username));
     }
 
     [HttpDelete]
