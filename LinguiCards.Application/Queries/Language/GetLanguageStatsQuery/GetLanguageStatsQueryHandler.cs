@@ -84,19 +84,36 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
     
     private List<string> GetTopWordsByAccuracy(IEnumerable<WordExtendedDTO> words, VocabularyType vocabularyType, bool isBest)
     {
-        return words
+        var wordAccuracyList = words
             .Where(w => w.Histories.Any(h => h.VocabularyType == (int)vocabularyType))
             .Select(w => new
             {
                 Word = w,
                 Accuracy = CalculateWordAccuracy(w.Histories, vocabularyType)
             })
-            .OrderByDescending(a => isBest ? a.Accuracy : -a.Accuracy)
-            .Take(3)
-            .Select(a => a.Word)
-            .Select(w => w.Name)
             .ToList();
+
+        var bestWords = wordAccuracyList
+            .OrderByDescending(a => a.Accuracy)
+            .Take(3)
+            .Select(a => a.Word.Name)
+            .ToList();
+
+        if (!isBest)
+        {
+            var worstWords = wordAccuracyList
+                .OrderBy(a => a.Accuracy)
+                .Where(a => !bestWords.Contains(a.Word.Name))
+                .Take(3)
+                .Select(a => a.Word.Name)
+                .ToList();
+
+            return worstWords;
+        }
+
+        return bestWords;
     }
+
     
     private double CalculateWordAccuracy(IEnumerable<WordChangeHistoryDTO> histories, VocabularyType vocabularyType)
     {
