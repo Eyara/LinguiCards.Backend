@@ -128,7 +128,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     ? w.TranslatedName
                     : w.Name)
             .Where(option => option != targetOption)
-            .OrderBy(o => Guid.NewGuid())
+            .OrderBy(option => LevenshteinDistanceHelper.CalculateDistance(option ,targetOption))
             .Take(3)
             .ToList();
 
