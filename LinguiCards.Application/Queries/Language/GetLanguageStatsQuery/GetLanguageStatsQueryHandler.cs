@@ -27,6 +27,9 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
 
         var words = await _wordRepository.GetAllExtendedAsync(request.LanguageId, cancellationToken);
         var totalWords = words.Count;
+        var totalLearnedWords = words.Count(word =>
+            word.ActiveLearnedPercent >= LearningSettings.LearnThreshold &&
+            word.PassiveLearnedPercent >= LearningSettings.LearnThreshold);
 
         var learnedActiveCount = GetLearnedWordCount(words, w => w.ActiveLearnedPercent);
         var learnedPassiveCount = GetLearnedWordCount(words, w => w.PassiveLearnedPercent);
@@ -35,14 +38,20 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
         var averageActiveAccuracy = CalculateAverageAccuracy(words, VocabularyType.Active);
         var averagePassiveAccuracy = CalculateAverageAccuracy(words, VocabularyType.Passive);
 
+        var activeAverageLearnedPercent = Math.Round(words.Sum(word => word.ActiveLearnedPercent) / words.Count, 2);
+        var passiveAverageLearnedPercent = Math.Round(words.Sum(word => word.PassiveLearnedPercent) / words.Count, 2);
+
         return new LanguageDashboardStat
         {
             TotalWords = totalWords,
+            LearnedWords = totalLearnedWords,
             TotalTrainingDays = trainingDays,
             ActiveLearnedPercent = CalculateLearnedPercent(learnedActiveCount, totalWords),
             PassiveLearnedPercent = CalculateLearnedPercent(learnedPassiveCount, totalWords),
             ActiveAverageAccuracy = averageActiveAccuracy,
             PassiveAverageAccuracy = averagePassiveAccuracy,
+            ActiveAverageLearnedPercent = activeAverageLearnedPercent,
+            PassiveAverageLearnedPercent = passiveAverageLearnedPercent,
             BestActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, true),
             WorstActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, false),
             BestPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, true),
@@ -79,7 +88,7 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
 
     private double CalculateLearnedPercent(int learnedCount, int totalWords)
     {
-        return totalWords > 0 ? Math.Round(learnedCount / (double)totalWords * 100, 2) : 0;
+        return totalWords > 0 ? Math.Round(learnedCount / (double)totalWords, 2) : 0;
     }
     
     private List<string> GetTopWordsByAccuracy(IEnumerable<WordExtendedDTO> words, VocabularyType vocabularyType, bool isBest)
@@ -125,5 +134,4 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
 
         return relevantHistories.Count(h => h.IsCorrectAnswer) / (double)relevantHistories.Count;
     }
-
 }
