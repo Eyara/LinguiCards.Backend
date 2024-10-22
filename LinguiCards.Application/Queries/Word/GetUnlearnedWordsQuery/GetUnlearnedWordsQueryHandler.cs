@@ -128,7 +128,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     ? w.TranslatedName
                     : w.Name)
             .Where(option => option != targetOption)
-            .OrderBy(option => LevenshteinDistanceHelper.CalculateDistance(option ,targetOption))
+            .OrderBy(option => LevenshteinDistanceHelper.CalculateDistance(option, targetOption))
             .Take(3)
             .ToList();
 
@@ -146,7 +146,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
     }
 
-    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, VocabularyType vocabularyType, 
+    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, VocabularyType vocabularyType,
         CancellationToken cancellationToken)
     {
         var wordUpdates = new List<(int wordId, double passivePercent, double activePercent)>();
@@ -156,7 +156,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             if (ShouldUpdate(word))
             {
                 var daysDifference = GetDaysDifference(word);
-                var (newPassivePercent, newActivePercent) = CalculateNewLearnedPercent(word, daysDifference, vocabularyType);
+                var (newPassivePercent, newActivePercent) =
+                    CalculateNewLearnedPercent(word, daysDifference, vocabularyType);
 
                 wordUpdates.Add((word.Id, newPassivePercent, newActivePercent));
             }
@@ -178,7 +179,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         return (DateTime.Today - word.LastUpdated.Value).Days;
     }
 
-    private (double newPassivePercent, double newActivePercent) CalculateNewLearnedPercent(WordDto word, int daysDifference, VocabularyType vocabularyType)
+    private (double newPassivePercent, double newActivePercent) CalculateNewLearnedPercent(WordDto word,
+        int daysDifference, VocabularyType vocabularyType)
     {
         var newPassiveLearnedPercent = vocabularyType == VocabularyType.Active
             ? word.PassiveLearnedPercent
@@ -190,5 +192,4 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         return (newPassiveLearnedPercent, newActiveLearnedPercent);
     }
-
 }
