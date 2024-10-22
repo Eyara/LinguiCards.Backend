@@ -18,5 +18,8 @@ public interface IWordRepository
     Task UpdateAsync(int wordId, string name, string translationName, CancellationToken token);
     Task UpdatePassiveLearnLevel(int wordId, double passivePercent, CancellationToken token);
     Task UpdateActiveLearnLevel(int wordId, double activePercent, CancellationToken token);
+
+    Task UpdateLearnedPercentRangeAsync(List<(int wordId, double passivePercent, double activePercent)> wordUpdates,
+        CancellationToken token);
     Task DeleteAsync(int wordId, CancellationToken token);
 }

@@ -236,6 +236,28 @@ public class WordRepository : IWordRepository
         ;
         await _dbContext.SaveChangesAsync(token);
     }
+    
+    public async Task UpdateLearnedPercentRangeAsync(List<(int wordId, double passivePercent, double activePercent)> wordUpdates, CancellationToken token)
+    {
+        var wordIds = wordUpdates.Select(w => w.wordId).ToList();
+
+        var words = await _dbContext.Words
+            .Where(w => wordIds.Contains(w.Id))
+            .ToListAsync(token);
+
+        if (!words.Any()) throw new Exception("No words found.");
+
+        foreach (var word in words)
+        {
+            var updateInfo = wordUpdates.First(w => w.wordId == word.Id);
+            word.PassiveLearnedPercent = updateInfo.passivePercent;
+            word.ActiveLearnedPercent = updateInfo.activePercent;
+            word.LastUpdated = DateTime.UtcNow;
+        }
+
+        await _dbContext.SaveChangesAsync(token);
+    }
+
 
     public async Task DeleteAsync(int wordId, CancellationToken token)
     {

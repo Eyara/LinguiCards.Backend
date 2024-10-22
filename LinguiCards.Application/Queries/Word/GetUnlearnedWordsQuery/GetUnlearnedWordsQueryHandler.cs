@@ -42,19 +42,15 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             LearningSettings.LearnThreshold, VocabularyType.Active,
             cancellationToken);
 
-        // TODO: add method to WordRepo with range update learn level
-
         await UpdateLearnLevel(
             unlearnedPassiveWords,
-            word => word.PassiveLearnedPercent,
-            _wordRepository.UpdatePassiveLearnLevel,
+            VocabularyType.Passive,
             cancellationToken
         );
 
         await UpdateLearnLevel(
             unlearnedActiveWords,
-            word => word.ActiveLearnedPercent,
-            _wordRepository.UpdateActiveLearnLevel,
+            VocabularyType.Active,
             cancellationToken
         );
 
@@ -150,19 +146,49 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
     }
 
-    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, Func<WordDto, double> getLearnedPercent,
-        Func<int, double, CancellationToken, Task> updateLearnLevel, CancellationToken cancellationToken)
+    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, VocabularyType vocabularyType, 
+        CancellationToken cancellationToken)
     {
+        var wordUpdates = new List<(int wordId, double passivePercent, double activePercent)>();
+
         foreach (var word in words)
         {
-            if (word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today)
+            if (ShouldUpdate(word))
             {
-                var daysDifference = (DateTime.Today - word.LastUpdated.Value).Days;
-                var newLearnedPercent =
-                    Math.Max(Math.Round(getLearnedPercent(word) - LearningSettings.DayWeight * daysDifference, 2), 0);
+                var daysDifference = GetDaysDifference(word);
+                var (newPassivePercent, newActivePercent) = CalculateNewLearnedPercent(word, daysDifference, vocabularyType);
 
-                await updateLearnLevel(word.Id, newLearnedPercent, cancellationToken);
+                wordUpdates.Add((word.Id, newPassivePercent, newActivePercent));
             }
         }
+
+        if (wordUpdates.Any())
+        {
+            await _wordRepository.UpdateLearnedPercentRangeAsync(wordUpdates, cancellationToken);
+        }
     }
+
+    private bool ShouldUpdate(WordDto word)
+    {
+        return word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today;
+    }
+
+    private int GetDaysDifference(WordDto word)
+    {
+        return (DateTime.Today - word.LastUpdated.Value).Days;
+    }
+
+    private (double newPassivePercent, double newActivePercent) CalculateNewLearnedPercent(WordDto word, int daysDifference, VocabularyType vocabularyType)
+    {
+        var newPassiveLearnedPercent = vocabularyType == VocabularyType.Active
+            ? word.PassiveLearnedPercent
+            : Math.Max(Math.Round(word.PassiveLearnedPercent - LearningSettings.DayWeight * daysDifference, 2), 0);
+
+        var newActiveLearnedPercent = vocabularyType == VocabularyType.Active
+            ? Math.Max(Math.Round(word.ActiveLearnedPercent - LearningSettings.DayWeight * daysDifference, 2), 0)
+            : word.ActiveLearnedPercent;
+
+        return (newPassiveLearnedPercent, newActiveLearnedPercent);
+    }
+
 }
