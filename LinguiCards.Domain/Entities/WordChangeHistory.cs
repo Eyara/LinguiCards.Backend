@@ -10,6 +10,8 @@ public class WordChangeHistory
     
     public Guid? TrainingId { get; set; }
     
+    public string? CorrectAnswer { get; set; }
+    
     public string? Answer { get; set; }
 
     public DateTime ChangedOn { get; set; }

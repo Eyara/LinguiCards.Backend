@@ -65,7 +65,8 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 
         await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful,
             (int)vocabularyType, wordEntity.PassiveLearnedPercent, wordEntity.ActiveLearnedPercent,
-            request.TrainingId, request.Answer, cancellationToken);
+            request.TrainingId, GetAnswerByTrainingType(wordEntity, request.TrainingType), request.Answer,
+            cancellationToken);
 
         await UpdateXpLevel(user, request.WasSuccessful, cancellationToken);
 
@@ -86,5 +87,15 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         }
 
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
+    }
+
+    private string GetAnswerByTrainingType(WordDto word, TrainingType type)
+    {
+        if (TrainingTypesHelper.IsFromLearnTraining(type))
+        {
+            return word.TranslatedName;
+        }
+
+        return word.Name;
     }
 }
