@@ -12,8 +12,8 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 {
     private readonly ILanguageRepository _languageRepository;
     private readonly IUsersRepository _usersRepository;
-    private readonly IWordRepository _wordRepository;
     private readonly IWordChangeHistoryRepository _wordChangeHistoryRepository;
+    private readonly IWordRepository _wordRepository;
 
     public UpdateLearnLevelCommandHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
         IWordRepository wordRepository, IWordChangeHistoryRepository wordChangeHistoryRepository)
@@ -53,15 +53,11 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         newLevelPercent = Math.Max(newLevelPercent, 0);
 
         if (isActive)
-        {
             await _wordRepository.UpdateActiveLearnLevel(request.WordId, newLevelPercent,
                 cancellationToken);
-        }
         else
-        {
             await _wordRepository.UpdatePassiveLearnLevel(request.WordId, newLevelPercent,
                 cancellationToken);
-        }
 
         await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful,
             (int)vocabularyType, wordEntity.PassiveLearnedPercent, wordEntity.ActiveLearnedPercent,
@@ -91,10 +87,7 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 
     private string GetAnswerByTrainingType(WordDto word, TrainingType type)
     {
-        if (TrainingTypesHelper.IsFromLearnTraining(type))
-        {
-            return word.TranslatedName;
-        }
+        if (TrainingTypesHelper.IsFromLearnTraining(type)) return word.TranslatedName;
 
         return word.Name;
     }

@@ -4,7 +4,7 @@ public static class CalculatorXP
 {
     private const int BaseXp = 100;
     private const int Increment = 50;
-    
+
     public static int CalculateXpRequired(int level)
     {
         var multiplier = level switch
@@ -20,6 +20,6 @@ public static class CalculatorXP
             _ => 10.0
         };
 
-        return (int)((BaseXp + (Increment * (level - 1))) * Math.Log(level + 1) * multiplier);
+        return (int)((BaseXp + Increment * (level - 1)) * Math.Log(level + 1) * multiplier);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace LinguiCards.Application.Common.Exceptions;
 
-public class LanguageAlreadyExistsException: BadRequestException
+public class LanguageAlreadyExistsException : BadRequestException
 {
     public LanguageAlreadyExistsException()
         : base("Language already exists")

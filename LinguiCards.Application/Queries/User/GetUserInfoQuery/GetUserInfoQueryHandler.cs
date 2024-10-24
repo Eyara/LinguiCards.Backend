@@ -1,15 +1,9 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using LinguiCards.Application.Common.Exceptions;
-using LinguiCards.Application.Common.Exceptions.Base;
+﻿using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Constants;
 using LinguiCards.Application.Helpers;
 using MediatR;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 
 namespace LinguiCards.Application.Queries.User.GetUserInfoQuery;
 
@@ -31,10 +25,7 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 
-        if (user == null)
-        {
-            throw new UserNotFoundException();
-        }
+        if (user == null) throw new UserNotFoundException();
 
 
         var info = new UserInfo

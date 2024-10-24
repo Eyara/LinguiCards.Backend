@@ -21,5 +21,6 @@ public interface IWordRepository
 
     Task UpdateLearnedPercentRangeAsync(List<(int wordId, double passivePercent, double activePercent)> wordUpdates,
         CancellationToken token);
+
     Task DeleteAsync(int wordId, CancellationToken token);
 }

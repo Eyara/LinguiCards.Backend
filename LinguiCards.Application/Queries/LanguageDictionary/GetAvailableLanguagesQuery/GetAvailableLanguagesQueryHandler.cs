@@ -5,10 +5,11 @@ using MediatR;
 
 namespace LinguiCards.Application.Queries.LanguageDictionary.GetAvailableLanguagesQuery;
 
-public class GetAvailableLanguagesQueryHandler : IRequestHandler<GetAvailableLanguagesQuery, List<LanguageDictionaryDto>>
+public class
+    GetAvailableLanguagesQueryHandler : IRequestHandler<GetAvailableLanguagesQuery, List<LanguageDictionaryDto>>
 {
-    private readonly ILanguageRepository _languageRepository;
     private readonly ILanguageDictionaryRepository _languageDictionaryRepository;
+    private readonly ILanguageRepository _languageRepository;
     private readonly IUsersRepository _usersRepository;
 
     public GetAvailableLanguagesQueryHandler(ILanguageDictionaryRepository languageDictionaryRepository,
@@ -19,7 +20,8 @@ public class GetAvailableLanguagesQueryHandler : IRequestHandler<GetAvailableLan
         _usersRepository = usersRepository;
     }
 
-    public async Task<List<LanguageDictionaryDto>> Handle(GetAvailableLanguagesQuery request, CancellationToken cancellationToken)
+    public async Task<List<LanguageDictionaryDto>> Handle(GetAvailableLanguagesQuery request,
+        CancellationToken cancellationToken)
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 

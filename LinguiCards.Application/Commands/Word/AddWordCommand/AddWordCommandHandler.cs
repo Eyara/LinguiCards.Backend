@@ -32,10 +32,7 @@ public class AddWordCommandHandler : IRequestHandler<AddWordCommand, bool>
         var wordEntity =
             await _wordRepository.GetByNameAndLanguageIdAsync(request.LanguageId, request.Word.Name, cancellationToken);
 
-        if (wordEntity != null)
-        {
-            throw new WordAlreadyExistsException();
-        }
+        if (wordEntity != null) throw new WordAlreadyExistsException();
 
         await _wordRepository.AddAsync(request.Word, request.LanguageId, cancellationToken);
 

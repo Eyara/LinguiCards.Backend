@@ -40,7 +40,7 @@ public class LanguageRepository : ILanguageRepository
 
         return new LanguageDto
         {
-            Id = languageEntity.Id, 
+            Id = languageEntity.Id,
             Name = languageEntity.Name,
             Url = languageEntity.LanguageDictionary.Url,
             UserId = languageEntity.UserId,
@@ -58,7 +58,7 @@ public class LanguageRepository : ILanguageRepository
 
         return new LanguageDto
         {
-            Id = languageEntity.Id, 
+            Id = languageEntity.Id,
             Name = languageEntity.Name,
             Url = languageEntity.LanguageDictionary.Url,
             UserId = languageEntity.UserId,

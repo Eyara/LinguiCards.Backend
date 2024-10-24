@@ -1,6 +1,5 @@
 ﻿using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
-using LinguiCards.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LinguiCards.Infrastructure.Repository;
@@ -20,7 +19,7 @@ public class DefaultCribRepository : IDefaultCribRepository
                 join cd in _dbContext.CribDescriptions
                     on cr.Id equals cd.CribId
                 where cd.Type == 0 && cr.LanguageId == languageId
-                select new 
+                select new
                 {
                     CribId = cr.Id,
                     cr.LanguageId,

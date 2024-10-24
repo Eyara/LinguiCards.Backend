@@ -23,7 +23,7 @@ public class UserController : ControllerBase
         _configuration = configuration;
         _mediator = mediator;
     }
-    
+
     [Authorize]
     [HttpGet("info")]
     public async Task<UserInfo> Info()

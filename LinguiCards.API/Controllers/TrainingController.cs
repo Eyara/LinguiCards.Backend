@@ -1,5 +1,5 @@
 ﻿using LinguiCards.Application.Common.Models;
-using LinguiCards.Application.Queries.Crib.GetAllCribsQuery;
+using LinguiCards.Application.Queries.Training.GetTrainingByIdQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,19 +9,19 @@ namespace LinguiCards.Controllers;
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
-public class CribController : ControllerBase
+public class TrainingController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public CribController(IMediator mediator)
+    public TrainingController(IMediator mediator)
     {
         _mediator = mediator;
     }
 
-    [Route("all")]
+    [Route("{trainingId}")]
     [HttpGet]
-    public async Task<List<CribDTO>> GetAll(int languageId)
+    public async Task<List<WordChangeHistoryDTO>> GetAll(Guid trainingId)
     {
-        return await _mediator.Send(new GetAllCribsQuery(languageId));
+        return await _mediator.Send(new GetTrainingByIdQuery(trainingId));
     }
 }

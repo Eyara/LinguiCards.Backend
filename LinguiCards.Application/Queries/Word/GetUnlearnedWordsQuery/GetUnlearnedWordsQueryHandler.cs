@@ -117,10 +117,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     {
         var allWords = await _wordRepository.GetAllAsync(languageId, token);
 
-        if (allWords.Count < 3)
-        {
-            throw new Exception();
-        }
+        if (allWords.Count < 3) throw new Exception();
 
         var result = allWords
             .Select(w =>
@@ -139,9 +136,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     private TrainingType GetTrainingType(int i, int count, VocabularyType vocabularyType)
     {
         if (vocabularyType == VocabularyType.Passive)
-        {
             return i < count / 2 ? TrainingType.FromLearnLanguage : TrainingType.FromNativeLanguage;
-        }
 
         return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
     }
@@ -152,7 +147,6 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         var wordUpdates = new List<(int wordId, double passivePercent, double activePercent)>();
 
         foreach (var word in words)
-        {
             if (ShouldUpdate(word))
             {
                 var daysDifference = GetDaysDifference(word);
@@ -161,12 +155,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
                 wordUpdates.Add((word.Id, newPassivePercent, newActivePercent));
             }
-        }
 
-        if (wordUpdates.Any())
-        {
-            await _wordRepository.UpdateLearnedPercentRangeAsync(wordUpdates, cancellationToken);
-        }
+        if (wordUpdates.Any()) await _wordRepository.UpdateLearnedPercentRangeAsync(wordUpdates, cancellationToken);
     }
 
     private bool ShouldUpdate(WordDto word)

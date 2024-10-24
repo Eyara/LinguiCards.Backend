@@ -1,5 +1,7 @@
 ﻿using LinguiCards.Application.Common.Interfaces;
+using LinguiCards.Application.Common.Models;
 using LinguiCards.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace LinguiCards.Infrastructure.Repository;
 
@@ -30,5 +32,23 @@ public class WordChangeHistoryRepository : IWordChangeHistoryRepository
             }
         );
         await _dbContext.SaveChangesAsync(token);
+    }
+
+    public async Task<List<WordChangeHistoryDTO>> GetAllById(Guid trainingId, CancellationToken token)
+    {
+        return await _dbContext.WordChangeHistories
+            .Where(h => h.TrainingId == trainingId)
+            .Select(h => new WordChangeHistoryDTO
+            {
+                Id = h.Id,
+                IsCorrectAnswer = h.IsCorrectAnswer,
+                ActiveLearned = h.ActiveLearned,
+                PassiveLearned = h.PassiveLearned,
+                VocabularyType = h.VocabularyType,
+                ChangedOn = h.ChangedOn,
+                Answer = h.Answer,
+                CorrectAnswer = h.CorrectAnswer
+            })
+            .ToListAsync(token);
     }
 }

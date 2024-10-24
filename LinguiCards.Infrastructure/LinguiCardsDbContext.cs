@@ -81,14 +81,14 @@ public class LinguiCardsDbContext : DbContext
             .WithMany(l => l.Histories)
             .HasForeignKey(w => w.WordId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         modelBuilder.Entity<DefaultCrib>()
             .HasKey(c => c.Id);
 
         modelBuilder.Entity<DefaultCrib>()
             .Property(c => c.Id)
             .ValueGeneratedOnAdd();
-        
+
         modelBuilder.Entity<CribDescription>()
             .HasKey(c => c.Id);
 

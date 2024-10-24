@@ -31,7 +31,7 @@ public class LanguageController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new GetAllLanguagesQuery(username));
     }
-    
+
     [Route("available")]
     [HttpGet]
     public async Task<List<LanguageDictionaryDto>> GetAvailable()
@@ -46,7 +46,7 @@ public class LanguageController : ControllerBase
     {
         return await _mediator.Send(new GetAllLanguageDictionariesQuery());
     }
-    
+
     [Route("stats")]
     [HttpGet]
     public async Task<LanguageDashboardStat> GetStats([FromQuery] int languageId)

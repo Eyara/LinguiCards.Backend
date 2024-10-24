@@ -20,7 +20,8 @@ public class GetAllWordsPaginatedQueryHandler : IRequestHandler<GetAllWordsPagin
         _wordRepository = wordRepository;
     }
 
-    public async Task<PaginatedResult<WordDto>> Handle(GetAllWordsPaginatedQuery request, CancellationToken cancellationToken)
+    public async Task<PaginatedResult<WordDto>> Handle(GetAllWordsPaginatedQuery request,
+        CancellationToken cancellationToken)
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 

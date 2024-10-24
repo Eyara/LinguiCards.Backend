@@ -21,12 +21,10 @@ public class AddLanguageCommandHandler : IRequestHandler<AddLanguageCommand, boo
 
         if (user == null) throw new UserNotFoundException();
 
-        var language = await _languageRepository.GetByNameAndUserAsync(request.Language.Name, user.Id, cancellationToken);
+        var language =
+            await _languageRepository.GetByNameAndUserAsync(request.Language.Name, user.Id, cancellationToken);
 
-        if (language != null)
-        {
-            throw new LanguageAlreadyExistsException();
-        }
+        if (language != null) throw new LanguageAlreadyExistsException();
 
         await _languageRepository.AddAsync(request.Language, user.Id, cancellationToken);
         return true;

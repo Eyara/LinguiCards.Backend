@@ -55,7 +55,7 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
             BestActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, true),
             WorstActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, false),
             BestPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, true),
-            WorstPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, false),
+            WorstPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, false)
         };
     }
 
@@ -90,8 +90,9 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
     {
         return totalWords > 0 ? Math.Round(learnedCount / (double)totalWords, 2) : 0;
     }
-    
-    private List<string> GetTopWordsByAccuracy(IEnumerable<WordExtendedDTO> words, VocabularyType vocabularyType, bool isBest)
+
+    private List<string> GetTopWordsByAccuracy(IEnumerable<WordExtendedDTO> words, VocabularyType vocabularyType,
+        bool isBest)
     {
         var wordAccuracyList = words
             .Where(w => w.Histories.Any(h => h.VocabularyType == (int)vocabularyType))
@@ -123,7 +124,7 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
         return bestWords;
     }
 
-    
+
     private double CalculateWordAccuracy(IEnumerable<WordChangeHistoryDTO> histories, VocabularyType vocabularyType)
     {
         var relevantHistories = histories

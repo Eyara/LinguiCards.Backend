@@ -8,4 +8,6 @@ public class WordChangeHistoryDTO
     public double ActiveLearned { get; set; }
     public int VocabularyType { get; set; }
     public DateTime ChangedOn { get; set; }
+    public string Answer { get; set; }
+    public string CorrectAnswer { get; set; }
 }

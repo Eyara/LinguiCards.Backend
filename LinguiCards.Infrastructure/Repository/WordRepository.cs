@@ -127,14 +127,15 @@ public class WordRepository : IWordRepository
     }
 
 
-    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, VocabularyType type, CancellationToken token, int top = 15)
+    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, VocabularyType type,
+        CancellationToken token, int top = 15)
     {
         var wordsQuery = type == VocabularyType.Passive
             ? _dbContext.Words
                 .Where(w => w.LanguageId == languageId && w.PassiveLearnedPercent < percentThreshold)
             : _dbContext.Words
                 .Where(w => w.LanguageId == languageId && w.ActiveLearnedPercent < percentThreshold);
-        
+
         var wordEntities = await wordsQuery
             .OrderByDescending(w => Guid.NewGuid())
             .Take(top)
@@ -161,7 +162,7 @@ public class WordRepository : IWordRepository
             {
                 Name = word.Name.ToLower(),
                 TranslatedName = word.TranslatedName.ToLower(),
-                LanguageId = languageId, 
+                LanguageId = languageId,
                 PassiveLearnedPercent = 0,
                 ActiveLearnedPercent = 0,
                 LastUpdated = DateTime.UtcNow,
@@ -170,7 +171,7 @@ public class WordRepository : IWordRepository
 
         await _dbContext.SaveChangesAsync(token);
     }
-    
+
     public async Task AddRangeAsync(IEnumerable<WordDto> words, int languageId, CancellationToken token)
     {
         using var transaction = await _dbContext.Database.BeginTransactionAsync(token);
@@ -180,7 +181,7 @@ public class WordRepository : IWordRepository
             {
                 Name = word.Name.ToLower(),
                 TranslatedName = word.TranslatedName.ToLower(),
-                LanguageId = languageId, 
+                LanguageId = languageId,
                 PassiveLearnedPercent = 0,
                 ActiveLearnedPercent = 0,
                 LastUpdated = DateTime.UtcNow,
@@ -223,7 +224,7 @@ public class WordRepository : IWordRepository
         ;
         await _dbContext.SaveChangesAsync(token);
     }
-    
+
     public async Task UpdateActiveLearnLevel(int wordId, double activePercent, CancellationToken token)
     {
         var word = await _dbContext.Words
@@ -236,8 +237,9 @@ public class WordRepository : IWordRepository
         ;
         await _dbContext.SaveChangesAsync(token);
     }
-    
-    public async Task UpdateLearnedPercentRangeAsync(List<(int wordId, double passivePercent, double activePercent)> wordUpdates, CancellationToken token)
+
+    public async Task UpdateLearnedPercentRangeAsync(
+        List<(int wordId, double passivePercent, double activePercent)> wordUpdates, CancellationToken token)
     {
         var wordIds = wordUpdates.Select(w => w.wordId).ToList();
 
