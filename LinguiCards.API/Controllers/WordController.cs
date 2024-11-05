@@ -31,7 +31,8 @@ public class WordController : ControllerBase
         [FromQuery] int pageSize = 15, [FromQuery] string filterQuery = "")
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
-        return await _mediator.Send(new GetAllWordsPaginatedQuery(languageId, username, pageNumber, pageSize, filterQuery));
+        return await _mediator.Send(new GetAllWordsPaginatedQuery(languageId, username, pageNumber, pageSize,
+            filterQuery));
     }
 
     [Route("unlearned")]

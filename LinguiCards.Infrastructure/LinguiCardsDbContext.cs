@@ -16,6 +16,7 @@ public class LinguiCardsDbContext : DbContext
     public DbSet<WordChangeHistory> WordChangeHistories { get; set; }
     public DbSet<DefaultCrib> DefaultCribs { get; set; }
     public DbSet<CribDescription> CribDescriptions { get; set; }
+    public DbSet<UserSetting> UserSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -95,5 +96,18 @@ public class LinguiCardsDbContext : DbContext
         modelBuilder.Entity<CribDescription>()
             .Property(c => c.Id)
             .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<UserSetting>()
+            .HasKey(us => us.Id);
+
+        modelBuilder.Entity<UserSetting>()
+            .Property(us => us.Id)
+            .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<UserSetting>()
+            .HasOne(us => us.User)
+            .WithOne(u => u.UserSetting)
+            .HasForeignKey<UserSetting>(u => u.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddScoped<IWordRepository, WordRepository>();
         services.AddScoped<IWordChangeHistoryRepository, WordChangeHistoryRepository>();
         services.AddScoped<IDefaultCribRepository, DefaultCribRepository>();
+        services.AddScoped<IUserSettingRepository, UserSettingRepository>();
 
         return services;
     }

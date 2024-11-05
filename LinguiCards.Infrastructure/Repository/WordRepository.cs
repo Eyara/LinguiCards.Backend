@@ -81,9 +81,7 @@ public class WordRepository : IWordRepository
         var wordQuery = _dbContext.Words.Where(w => w.LanguageId == languageId);
 
         if (!string.IsNullOrWhiteSpace(filterQuery))
-        {
             wordQuery = wordQuery.Where(w => w.TranslatedName.Contains(filterQuery));
-        }
 
         return await wordQuery
             .OrderByDescending(w => w.ActiveLearnedPercent)

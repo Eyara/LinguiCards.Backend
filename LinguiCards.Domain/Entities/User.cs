@@ -10,5 +10,8 @@ public class User
     public int Level { get; set; }
     public double XP { get; set; }
 
+    public int? UserSettingId { get; set; }
+    public virtual UserSetting UserSetting { get; set; }
+
     public ICollection<Language> Languages { get; set; }
 }

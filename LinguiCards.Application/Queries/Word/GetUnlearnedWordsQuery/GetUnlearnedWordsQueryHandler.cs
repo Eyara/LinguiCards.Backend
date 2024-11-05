@@ -13,13 +13,15 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     private readonly ILanguageRepository _languageRepository;
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
+    private readonly IUserSettingRepository _userSettingRepository;
 
     public GetUnlearnedWordsQueryHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
-        IWordRepository wordRepository)
+        IWordRepository wordRepository, IUserSettingRepository userSettingRepository)
     {
         _languageRepository = languageRepository;
         _usersRepository = usersRepository;
         _wordRepository = wordRepository;
+        _userSettingRepository = userSettingRepository;
     }
 
     public async Task<List<TrainingWord>> Handle(GetUnlearnedWordsQuery request, CancellationToken cancellationToken)
@@ -54,13 +56,15 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             cancellationToken
         );
 
+        var (activeTrainingSize, passiveTrainingSize) = await GetTrainingSizes(user.Id, cancellationToken);
+
         var resultPassive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
             VocabularyType.Passive,
-            cancellationToken, 8);
+            cancellationToken, passiveTrainingSize);
 
         var resultActive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
             VocabularyType.Active,
-            cancellationToken, 8);
+            cancellationToken, activeTrainingSize);
 
         var result = new List<TrainingWord>();
 
@@ -181,5 +185,13 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             : word.ActiveLearnedPercent;
 
         return (newPassiveLearnedPercent, newActiveLearnedPercent);
+    }
+
+    private async Task<(int activeTrainingSize, int passiveTrainingSize)> GetTrainingSizes(int userId,
+        CancellationToken token)
+    {
+        var userSettings = await _userSettingRepository.GetByUserIdAsync(userId, token);
+
+        return userSettings != null ? (userSettings.ActiveTrainingSize, userSettings.PassiveTrainingSize) : (8, 8);
     }
 }
