@@ -7,7 +7,7 @@ public interface IWordRepository
     Task<WordDto> GetByIdAsync(int wordId, CancellationToken token);
     Task<WordDto> GetByNameAndLanguageIdAsync(int languageId, string name, CancellationToken token);
     Task<List<WordDto>> GetAllAsync(int languageId, CancellationToken token);
-    Task<PaginatedResult<WordDto>> GetAllPaginatedAsync(int languageId, int pageNumber, int pageSize);
+    Task<PaginatedResult<WordDto>> GetAllPaginatedAsync(int languageId, int pageNumber, int pageSize, string filterQuery = "");
     Task<List<WordExtendedDTO>> GetAllExtendedAsync(int languageId, CancellationToken token);
 
     Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, VocabularyType type,

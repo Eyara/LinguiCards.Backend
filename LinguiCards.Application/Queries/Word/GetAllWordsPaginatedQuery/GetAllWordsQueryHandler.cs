@@ -33,6 +33,7 @@ public class GetAllWordsPaginatedQueryHandler : IRequestHandler<GetAllWordsPagin
 
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
-        return await _wordRepository.GetAllPaginatedAsync(request.LanguageId, request.PageNumber, request.PageSize);
+        return await _wordRepository.GetAllPaginatedAsync(request.LanguageId, request.PageNumber, request.PageSize,
+            request.FilterQuery);
     }
 }

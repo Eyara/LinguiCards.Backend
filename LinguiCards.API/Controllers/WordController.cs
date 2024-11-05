@@ -28,10 +28,10 @@ public class WordController : ControllerBase
     [Route("/api/Language/{languageId}/Word")]
     [HttpGet]
     public async Task<PaginatedResult<WordDto>> GetAllPaginated(int languageId, [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 15)
+        [FromQuery] int pageSize = 15, [FromQuery] string filterQuery = "")
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
-        return await _mediator.Send(new GetAllWordsPaginatedQuery(languageId, username, pageNumber, pageSize));
+        return await _mediator.Send(new GetAllWordsPaginatedQuery(languageId, username, pageNumber, pageSize, filterQuery));
     }
 
     [Route("unlearned")]
