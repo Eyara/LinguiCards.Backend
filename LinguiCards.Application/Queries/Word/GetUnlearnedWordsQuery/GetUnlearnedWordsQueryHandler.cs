@@ -88,6 +88,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         var count = words.Count;
         var result = new List<TrainingWord>();
 
+        var allWords = await _wordRepository.GetAllAsync(words.First().LanguageId, token);
+
         for (var i = 0; i < count; i++)
         {
             var type = GetTrainingType(i, count, vocabularyType);
@@ -98,6 +100,27 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     type,
                     token)
                 : null;
+            
+            var modifiedName = words[i].Name;
+            var modifiedTranslatedName = words[i].TranslatedName;
+            var filteredWords = allWords.Where(w => w.Id != words[i].Id).ToList();
+
+            switch (type)
+            {
+                // Adjust name or translated name if there is a collision in allWords
+                case TrainingType.FromLearnLanguage:
+                case TrainingType.WritingFromLearnLanguage:
+                    modifiedName = ResolveNameConflict(words[i].Name, words[i].TranslatedName, filteredWords, true);
+                    break;
+                case TrainingType.FromNativeLanguage:
+                case TrainingType.WritingFromNativeLanguage:
+                    modifiedTranslatedName = ResolveNameConflict(words[i].TranslatedName, words[i].Name, filteredWords, false);
+                    break;
+                case TrainingType.Sentence:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             result.Add(new TrainingWord
             {
@@ -105,8 +128,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                 LanguageId = words[i].LanguageId,
                 LastUpdated = words[i].LastUpdated,
                 PassiveLearnedPercent = words[i].PassiveLearnedPercent,
-                Name = words[i].Name,
-                TranslatedName = words[i].TranslatedName,
+                Name = modifiedName,
+                TranslatedName = modifiedTranslatedName,
                 Type = type,
                 Options = options,
                 TrainingId = trainingId
@@ -193,5 +216,31 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         var userSettings = await _userSettingRepository.GetByUserIdAsync(userId, token);
 
         return userSettings != null ? (userSettings.ActiveTrainingSize, userSettings.PassiveTrainingSize) : (8, 8);
+    }
+    
+    private string ResolveNameConflict(string primaryName, string fallbackName, List<WordDto> allWords, bool checkPrimary)
+    {
+        var existingWord = allWords.FirstOrDefault(w => checkPrimary ? w.Name == primaryName : w.TranslatedName == primaryName);
+        if (existingWord == null)
+        {
+            return primaryName;
+        }
+
+        var length = Math.Min(primaryName.Length, fallbackName.Length);
+        var modifiedName = primaryName;
+
+        for (int i = 1; i < length; i++)
+        {
+            var substring = fallbackName.Substring(0, i);
+            modifiedName = $"{primaryName} ({substring})";
+
+            var isUnique = !allWords.Any(w => checkPrimary ? w.Name == modifiedName : w.TranslatedName == modifiedName);
+            if (isUnique)
+            {
+                return modifiedName;
+            }
+        }
+
+        return primaryName;
     }
 }
