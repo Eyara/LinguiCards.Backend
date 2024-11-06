@@ -76,12 +76,15 @@ public class WordRepository : IWordRepository
     }
 
     public async Task<PaginatedResult<WordDto>> GetAllPaginatedAsync(int languageId, int pageNumber, int pageSize,
-        string filterQuery = "")
+        string nameFilterQuery = "", string translationNameFilterQuery = "")
     {
         var wordQuery = _dbContext.Words.Where(w => w.LanguageId == languageId);
 
-        if (!string.IsNullOrWhiteSpace(filterQuery))
-            wordQuery = wordQuery.Where(w => w.TranslatedName.Contains(filterQuery));
+        if (!string.IsNullOrWhiteSpace(nameFilterQuery))
+            wordQuery = wordQuery.Where(w => w.Name.Contains(nameFilterQuery));
+        
+        if (!string.IsNullOrWhiteSpace(translationNameFilterQuery))
+            wordQuery = wordQuery.Where(w => w.TranslatedName.Contains(translationNameFilterQuery));
 
         return await wordQuery
             .OrderByDescending(w => w.ActiveLearnedPercent)

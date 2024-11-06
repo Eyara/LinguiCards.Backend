@@ -9,7 +9,7 @@ public interface IWordRepository
     Task<List<WordDto>> GetAllAsync(int languageId, CancellationToken token);
 
     Task<PaginatedResult<WordDto>> GetAllPaginatedAsync(int languageId, int pageNumber, int pageSize,
-        string filterQuery = "");
+        string nameFilterQuery = "", string translationNameFilterQuery = "");
 
     Task<List<WordExtendedDTO>> GetAllExtendedAsync(int languageId, CancellationToken token);
 
