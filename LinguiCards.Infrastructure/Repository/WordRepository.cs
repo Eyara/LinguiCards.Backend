@@ -81,25 +81,31 @@ public class WordRepository : IWordRepository
         var wordQuery = _dbContext.Words.Where(w => w.LanguageId == languageId);
 
         if (!string.IsNullOrWhiteSpace(nameFilterQuery))
-            wordQuery = wordQuery.Where(w => w.Name.Contains(nameFilterQuery));
+            wordQuery = wordQuery.Where(w => w.Name.ToLower().Trim().Contains(nameFilterQuery.ToLower().Trim()));
         
         if (!string.IsNullOrWhiteSpace(translationNameFilterQuery))
-            wordQuery = wordQuery.Where(w => w.TranslatedName.Contains(translationNameFilterQuery));
+            wordQuery = wordQuery.Where(w => w.TranslatedName.ToLower().Trim().Contains(translationNameFilterQuery.ToLower().Trim()));
+        
+        var wordDtoQuery = wordQuery.Select(w => new WordDto
+        {
+            Id = w.Id,
+            LanguageId = w.LanguageId,
+            Name = w.Name,
+            TranslatedName = w.TranslatedName,
+            PassiveLearnedPercent = w.PassiveLearnedPercent,
+            ActiveLearnedPercent = w.ActiveLearnedPercent,
+            LastUpdated = w.LastUpdated
+        });
 
-        return await wordQuery
-            .OrderByDescending(w => w.ActiveLearnedPercent)
-            .ThenByDescending(w => w.PassiveLearnedPercent)
-            .Select(w => new WordDto
-            {
-                Id = w.Id,
-                LanguageId = w.LanguageId,
-                Name = w.Name,
-                TranslatedName = w.TranslatedName,
-                PassiveLearnedPercent = w.PassiveLearnedPercent,
-                ActiveLearnedPercent = w.ActiveLearnedPercent,
-                LastUpdated = w.LastUpdated
-            })
-            .ToPaginatedResultAsync(pageNumber, pageSize);
+        // Check if pagination should be skipped
+        if (!string.IsNullOrWhiteSpace(nameFilterQuery) || !string.IsNullOrWhiteSpace(translationNameFilterQuery))
+        {
+            var results = await wordDtoQuery.ToListAsync();
+            return new PaginatedResult<WordDto>(results, results.Count, 1, results.Count);
+        }
+
+        // Apply pagination if no query filters
+        return await wordDtoQuery.ToPaginatedResultAsync(pageNumber, pageSize);
     }
 
     public async Task<List<WordExtendedDTO>> GetAllExtendedAsync(int languageId, CancellationToken token)
@@ -168,8 +174,8 @@ public class WordRepository : IWordRepository
         await _dbContext.Words.AddAsync(
             new Word
             {
-                Name = word.Name.ToLower(),
-                TranslatedName = word.TranslatedName.ToLower(),
+                Name = word.Name.ToLower().Trim().Replace('ё', 'е'),
+                TranslatedName = word.TranslatedName.ToLower().Trim().Replace('ё', 'е'),
                 LanguageId = languageId,
                 PassiveLearnedPercent = 0,
                 ActiveLearnedPercent = 0,
@@ -187,8 +193,8 @@ public class WordRepository : IWordRepository
         {
             var wordEntities = words.Select(word => new Word
             {
-                Name = word.Name.ToLower(),
-                TranslatedName = word.TranslatedName.ToLower(),
+                Name = word.Name.ToLower().Trim().Replace('ё', 'е'),
+                TranslatedName = word.TranslatedName.ToLower().Trim().Replace('ё', 'е'),
                 LanguageId = languageId,
                 PassiveLearnedPercent = 0,
                 ActiveLearnedPercent = 0,
@@ -214,8 +220,8 @@ public class WordRepository : IWordRepository
 
         if (word == null) throw new Exception();
 
-        word.Name = name.ToLower();
-        word.TranslatedName = translationName.ToLower();
+        word.Name = name.ToLower().Trim().Replace('ё', 'е');
+        word.TranslatedName = translationName.ToLower().Trim().Replace('ё', 'е');
 
         await _dbContext.SaveChangesAsync(token);
     }
