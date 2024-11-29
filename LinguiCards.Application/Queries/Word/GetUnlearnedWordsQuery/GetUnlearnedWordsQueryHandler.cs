@@ -88,6 +88,8 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         var count = words.Count;
         var result = new List<TrainingWord>();
 
+        if (words.Count == 0) return result;
+
         var allWords = await _wordRepository.GetAllAsync(words.First().LanguageId, token);
 
         for (var i = 0; i < count; i++)
