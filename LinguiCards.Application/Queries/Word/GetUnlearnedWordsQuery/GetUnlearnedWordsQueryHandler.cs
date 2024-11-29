@@ -95,14 +95,37 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         for (var i = 0; i < count; i++)
         {
             var type = GetTrainingType(i, count, vocabularyType);
-            var options = vocabularyType == VocabularyType.Passive
-                ? await GetTrainingOptions(
-                    type == TrainingType.FromLearnLanguage ? words[i].TranslatedName : words[i].Name,
-                    words[i].LanguageId,
-                    type,
-                    token)
-                : null;
-            
+            List<string>? options = null;
+            List<string>? connectionTargets = null;
+
+            if (vocabularyType == VocabularyType.Passive)
+            {
+                if (type == TrainingType.WordConnect)
+                {
+                    var randomWords = allWords
+                        .Where(w => w.Id != words[i].Id)
+                        .OrderBy(_ => Guid.NewGuid())
+                        .Take(3)
+                        .ToList();
+
+                    connectionTargets = randomWords.Select(w => w.Name).ToList();
+                    connectionTargets.Add(words[i].Name);
+                    connectionTargets = connectionTargets.OrderBy(_ => Guid.NewGuid()).ToList();
+
+                    options = randomWords.Select(w => w.TranslatedName).ToList();
+                    options.Add(words[i].TranslatedName);
+                    options = options.OrderBy(_ => Guid.NewGuid()).ToList();
+                }
+                else
+                {
+                    options = await GetTrainingOptions(
+                        type == TrainingType.FromLearnLanguage ? words[i].TranslatedName : words[i].Name,
+                        words[i].LanguageId,
+                        type,
+                        token);
+                }
+            }
+
             var modifiedName = words[i].Name;
             var modifiedTranslatedName = words[i].TranslatedName;
             var filteredWords = allWords.Where(w => w.Id != words[i].Id).ToList();
@@ -116,9 +139,12 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     break;
                 case TrainingType.FromNativeLanguage:
                 case TrainingType.WritingFromNativeLanguage:
-                    modifiedTranslatedName = ResolveNameConflict(words[i].TranslatedName, words[i].Name, filteredWords, false);
+                    modifiedTranslatedName =
+                        ResolveNameConflict(words[i].TranslatedName, words[i].Name, filteredWords, false);
                     break;
                 case TrainingType.Sentence:
+                    break;
+                case TrainingType.WordConnect:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -134,6 +160,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                 TranslatedName = modifiedTranslatedName,
                 Type = type,
                 Options = options,
+                ConnectionTargets = connectionTargets,
                 TrainingId = trainingId
             });
         }
@@ -146,6 +173,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     {
         var allWords = await _wordRepository.GetAllAsync(languageId, token);
 
+        // TODO: make-up exception
         if (allWords.Count < 3) throw new Exception();
 
         var result = allWords
@@ -165,10 +193,22 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     private TrainingType GetTrainingType(int i, int count, VocabularyType vocabularyType)
     {
         if (vocabularyType == VocabularyType.Passive)
-            return i < count / 2 ? TrainingType.FromLearnLanguage : TrainingType.FromNativeLanguage;
+        {
+            var fromLearnLangBoundary = count * 40 / 100;
+            var fromNativeLangBoundary = fromLearnLangBoundary + count * 40 / 100;
 
+            if (i < fromLearnLangBoundary)
+                return TrainingType.FromLearnLanguage;
+            if (i < fromNativeLangBoundary)
+                return TrainingType.FromNativeLanguage;
+
+            return TrainingType.WordConnect; // Remaining 20%
+        }
+
+        // Default case for active vocabulary
         return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
     }
+
 
     private async Task UpdateLearnLevel(IEnumerable<WordDto> words, VocabularyType vocabularyType,
         CancellationToken cancellationToken)
@@ -219,10 +259,12 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         return userSettings != null ? (userSettings.ActiveTrainingSize, userSettings.PassiveTrainingSize) : (8, 8);
     }
-    
-    private string ResolveNameConflict(string primaryName, string fallbackName, List<WordDto> allWords, bool checkPrimary)
+
+    private string ResolveNameConflict(string primaryName, string fallbackName, List<WordDto> allWords,
+        bool checkPrimary)
     {
-        var existingWord = allWords.FirstOrDefault(w => checkPrimary ? w.Name == primaryName : w.TranslatedName == primaryName);
+        var existingWord =
+            allWords.FirstOrDefault(w => checkPrimary ? w.Name == primaryName : w.TranslatedName == primaryName);
         if (existingWord == null)
         {
             return primaryName;
