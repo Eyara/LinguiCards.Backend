@@ -97,6 +97,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             var type = GetTrainingType(i, count, vocabularyType);
             List<string>? options = null;
             List<string>? connectionTargets = null;
+            Dictionary<string, string> connectionMatches = new Dictionary<string, string>();
 
             if (vocabularyType == VocabularyType.Passive)
             {
@@ -111,6 +112,11 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     connectionTargets = randomWords.Select(w => w.Name).ToList();
                     connectionTargets.Add(words[i].Name);
                     connectionTargets = connectionTargets.OrderBy(_ => Guid.NewGuid()).ToList();
+
+                    foreach (var randomWord in randomWords)
+                    {
+                        connectionMatches.Add(randomWord.Name, randomWord.TranslatedName);
+                    }
 
                     options = randomWords.Select(w => w.TranslatedName).ToList();
                     options.Add(words[i].TranslatedName);
@@ -154,13 +160,12 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             {
                 Id = words[i].Id,
                 LanguageId = words[i].LanguageId,
-                LastUpdated = words[i].LastUpdated,
-                PassiveLearnedPercent = words[i].PassiveLearnedPercent,
                 Name = modifiedName,
                 TranslatedName = modifiedTranslatedName,
                 Type = type,
                 Options = options,
                 ConnectionTargets = connectionTargets,
+                ConnectionMatches = connectionMatches,
                 TrainingId = trainingId
             });
         }
