@@ -8,7 +8,16 @@ public class TrainingWord : WordDto
     
     public List<string> ConnectionTargets { get; set; }
     
-    public Dictionary<string, string> ConnectionMatches { get; set; }
+    public List<WordConnection> ConnectionMatches { get; set; }
+}
+
+public class WordConnection
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string TranslatedName { get; set; }
+    public TrainingType Type { get; set; }
+    public Guid TrainingId { get; set; }
 }
 
 public enum TrainingType
