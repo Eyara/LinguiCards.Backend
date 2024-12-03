@@ -113,6 +113,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     connectionTargets.Add(words[i].Name);
                     connectionTargets = connectionTargets.OrderBy(_ => Guid.NewGuid()).ToList();
 
+                    connectionMatches.Add(words[i].Name, words[i].TranslatedName);
                     foreach (var randomWord in randomWords)
                     {
                         connectionMatches.Add(randomWord.Name, randomWord.TranslatedName);
