@@ -109,7 +109,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                         .Take(3)
                         .ToList();
 
-                    connectionTargets = randomWords.Select(w => w.Name).ToList();
+                    connectionTargets = randomWords.Select(w => w.Name).Distinct().ToList();
                     connectionTargets.Add(words[i].Name);
                     connectionTargets = connectionTargets.OrderBy(_ => Guid.NewGuid()).ToList();
 
@@ -202,6 +202,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     ? w.TranslatedName
                     : w.Name)
             .Where(option => option != targetOption)
+            .Distinct()
             .OrderBy(option => LevenshteinDistanceHelper.CalculateDistance(option, targetOption))
             .Take(3)
             .ToList();
