@@ -61,6 +61,7 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         }
 
         newLevelPercent = Math.Max(newLevelPercent, 0);
+        newLevelPercent = Math.Min(newLevelPercent, 100);
 
         if (isActive)
             await _wordRepository.UpdateActiveLearnLevel(request.WordId, newLevelPercent,

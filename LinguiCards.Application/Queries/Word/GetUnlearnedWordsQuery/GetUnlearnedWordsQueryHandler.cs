@@ -268,6 +268,9 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             ? Math.Max(Math.Round(word.ActiveLearnedPercent - LearningSettings.DayWeight * daysDifference, 2), 0)
             : word.ActiveLearnedPercent;
 
+        newActiveLearnedPercent = Math.Min(newActiveLearnedPercent, 100);
+        newPassiveLearnedPercent = Math.Min(newPassiveLearnedPercent, 100);
+
         return (newPassiveLearnedPercent, newActiveLearnedPercent);
     }
 
