@@ -50,6 +50,16 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
             ? learnedPercent + LearningSettings.LearnStep
             : learnedPercent - LearningSettings.LearnStep;
 
+        var hintCount = request.HintCount ?? 0;
+        if (isActive)
+        {
+            newLevelPercent -=
+                (double)hintCount /
+                (request.TrainingType == TrainingType.WritingFromNativeLanguage
+                    ? wordEntity.TranslatedName.Length
+                    : wordEntity.Name.Length) * LearningSettings.LearnStep;
+        }
+
         newLevelPercent = Math.Max(newLevelPercent, 0);
 
         if (isActive)
