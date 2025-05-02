@@ -1,4 +1,6 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,19 +9,18 @@ namespace LinguiCards.Infrastructure.Repository;
 public class LanguageDictionaryRepository : ILanguageDictionaryRepository
 {
     private readonly LinguiCardsDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public LanguageDictionaryRepository(LinguiCardsDbContext dbContext)
+    public LanguageDictionaryRepository(LinguiCardsDbContext dbContext, IMapper mapper)
     {
         _dbContext = dbContext;
+        _mapper = mapper;
     }
 
     public async Task<List<LanguageDictionaryDto>> GetAllAsync(CancellationToken token)
     {
-        var languageDictionaries = await _dbContext.LanguageDictionaries
+        return await _dbContext.LanguageDictionaries
+            .ProjectTo<LanguageDictionaryDto>(_mapper.ConfigurationProvider)
             .ToListAsync(token);
-
-        return languageDictionaries
-            .Select(l => new LanguageDictionaryDto { Id = l.Id, Name = l.Name, Url = l.Url })
-            .ToList();
     }
 }

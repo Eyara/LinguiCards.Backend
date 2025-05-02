@@ -1,4 +1,6 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -8,26 +10,21 @@ namespace LinguiCards.Infrastructure.Repository;
 public class LanguageRepository : ILanguageRepository
 {
     private readonly LinguiCardsDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public LanguageRepository(LinguiCardsDbContext dbContext)
+    public LanguageRepository(LinguiCardsDbContext dbContext, IMapper mapper)
     {
         _dbContext = dbContext;
+        _mapper = mapper;
     }
 
     public async Task<List<LanguageDto>> GetAllAsync(int userId, CancellationToken token)
     {
-        var languageEntities = await _dbContext.Languages
+        return await _dbContext.Languages
             .Include(l => l.LanguageDictionary)
             .Where(l => l.UserId == userId)
+            .ProjectTo<LanguageDto>(_mapper.ConfigurationProvider)
             .ToListAsync(token);
-
-        return languageEntities
-            .Select(l => new LanguageDto
-            {
-                Id = l.Id, Name = l.Name, Url = l.LanguageDictionary.Url, UserId = l.UserId,
-                LanguageDictionaryId = l.LanguageDictionaryId
-            })
-            .ToList();
     }
 
     public async Task<LanguageDto> GetByIdAsync(int languageId, CancellationToken token)
@@ -38,14 +35,7 @@ public class LanguageRepository : ILanguageRepository
 
         if (languageEntity == null) return null;
 
-        return new LanguageDto
-        {
-            Id = languageEntity.Id,
-            Name = languageEntity.Name,
-            Url = languageEntity.LanguageDictionary.Url,
-            UserId = languageEntity.UserId,
-            LanguageDictionaryId = languageEntity.LanguageDictionaryId
-        };
+        return _mapper.Map<LanguageDto>(languageEntity);
     }
 
     public async Task<LanguageDto> GetByNameAndUserAsync(string name, int userId, CancellationToken token)
@@ -56,21 +46,14 @@ public class LanguageRepository : ILanguageRepository
 
         if (languageEntity == null) return null;
 
-        return new LanguageDto
-        {
-            Id = languageEntity.Id,
-            Name = languageEntity.Name,
-            Url = languageEntity.LanguageDictionary.Url,
-            UserId = languageEntity.UserId,
-            LanguageDictionaryId = languageEntity.LanguageDictionaryId
-        };
+        return _mapper.Map<LanguageDto>(languageEntity);
     }
 
     public async Task AddAsync(LanguageAddDto language, int userId, CancellationToken token)
     {
         var languageEntity = new Language
         {
-            Name = language.Name,
+            Name = language.Name.ToLower().Trim().Replace('ё', 'е'),
             UserId = userId,
             LanguageDictionaryId = language.LanguageDictionaryId
         };

@@ -1,4 +1,6 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Helpers;
 using LinguiCards.Domain.Entities;
@@ -9,10 +11,12 @@ namespace LinguiCards.Infrastructure.Repository;
 public class WordRepository : IWordRepository
 {
     private readonly LinguiCardsDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public WordRepository(LinguiCardsDbContext dbContext)
+    public WordRepository(LinguiCardsDbContext dbContext, IMapper mapper)
     {
         _dbContext = dbContext;
+        _mapper = mapper;
     }
 
     public async Task<WordDto> GetByIdAsync(int wordId, CancellationToken token)
@@ -22,16 +26,7 @@ public class WordRepository : IWordRepository
 
         if (wordEntity == null) return null;
 
-        return new WordDto
-        {
-            Id = wordEntity.Id,
-            LanguageId = wordEntity.LanguageId,
-            Name = wordEntity.Name,
-            TranslatedName = wordEntity.TranslatedName,
-            PassiveLearnedPercent = wordEntity.PassiveLearnedPercent,
-            ActiveLearnedPercent = wordEntity.ActiveLearnedPercent,
-            LastUpdated = wordEntity.LastUpdated
-        };
+        return _mapper.Map<WordDto>(wordEntity);
     }
 
     public async Task<WordDto> GetByNameAndLanguageIdAsync(int languageId, string name, CancellationToken token)
@@ -41,38 +36,17 @@ public class WordRepository : IWordRepository
 
         if (wordEntity == null) return null;
 
-        return new WordDto
-        {
-            Id = wordEntity.Id,
-            LanguageId = wordEntity.LanguageId,
-            Name = wordEntity.Name,
-            TranslatedName = wordEntity.TranslatedName,
-            PassiveLearnedPercent = wordEntity.PassiveLearnedPercent,
-            ActiveLearnedPercent = wordEntity.ActiveLearnedPercent,
-            LastUpdated = wordEntity.LastUpdated
-        };
+        return _mapper.Map<WordDto>(wordEntity);
     }
 
     public async Task<List<WordDto>> GetAllAsync(int languageId, CancellationToken token)
     {
-        var wordEntities = await _dbContext.Words
+        return await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
             .OrderByDescending(w => w.ActiveLearnedPercent)
             .ThenByDescending(w => w.PassiveLearnedPercent)
+            .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
             .ToListAsync(token);
-
-        return wordEntities
-            .Select(w => new WordDto
-            {
-                Id = w.Id,
-                LanguageId = w.LanguageId,
-                Name = w.Name,
-                TranslatedName = w.TranslatedName,
-                PassiveLearnedPercent = w.PassiveLearnedPercent,
-                ActiveLearnedPercent = w.ActiveLearnedPercent,
-                LastUpdated = w.LastUpdated
-            })
-            .ToList();
     }
 
     public async Task<PaginatedResult<WordDto>> GetAllPaginatedAsync(int languageId, int pageNumber, int pageSize,
@@ -82,20 +56,13 @@ public class WordRepository : IWordRepository
 
         if (!string.IsNullOrWhiteSpace(nameFilterQuery))
             wordQuery = wordQuery.Where(w => w.Name.ToLower().Trim().Contains(nameFilterQuery.ToLower().Trim()));
-        
+
         if (!string.IsNullOrWhiteSpace(translationNameFilterQuery))
-            wordQuery = wordQuery.Where(w => w.TranslatedName.ToLower().Trim().Contains(translationNameFilterQuery.ToLower().Trim()));
-        
-        var wordDtoQuery = wordQuery.Select(w => new WordDto
-        {
-            Id = w.Id,
-            LanguageId = w.LanguageId,
-            Name = w.Name,
-            TranslatedName = w.TranslatedName,
-            PassiveLearnedPercent = w.PassiveLearnedPercent,
-            ActiveLearnedPercent = w.ActiveLearnedPercent,
-            LastUpdated = w.LastUpdated
-        });
+            wordQuery = wordQuery.Where(w =>
+                w.TranslatedName.ToLower().Trim().Contains(translationNameFilterQuery.ToLower().Trim()));
+
+        var wordDtoQuery = wordQuery
+            .ProjectTo<WordDto>(_mapper.ConfigurationProvider);
 
         // Check if pagination should be skipped
         if (!string.IsNullOrWhiteSpace(nameFilterQuery) || !string.IsNullOrWhiteSpace(translationNameFilterQuery))
@@ -110,34 +77,13 @@ public class WordRepository : IWordRepository
 
     public async Task<List<WordExtendedDTO>> GetAllExtendedAsync(int languageId, CancellationToken token)
     {
-        var wordEntities = await _dbContext.Words
+        return await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
             .OrderByDescending(w => w.ActiveLearnedPercent)
             .ThenByDescending(w => w.PassiveLearnedPercent)
             .Include(w => w.Histories)
+            .ProjectTo<WordExtendedDTO>(_mapper.ConfigurationProvider)
             .ToListAsync(token);
-
-        return wordEntities
-            .Select(w => new WordExtendedDTO
-            {
-                Id = w.Id,
-                LanguageId = w.LanguageId,
-                Name = w.Name,
-                TranslatedName = w.TranslatedName,
-                PassiveLearnedPercent = w.PassiveLearnedPercent,
-                ActiveLearnedPercent = w.ActiveLearnedPercent,
-                LastUpdated = w.LastUpdated,
-                Histories = w.Histories.Select(h => new WordChangeHistoryDTO
-                {
-                    Id = h.Id,
-                    ChangedOn = h.ChangedOn,
-                    IsCorrectAnswer = h.IsCorrectAnswer,
-                    PassiveLearned = h.PassiveLearned,
-                    VocabularyType = h.VocabularyType,
-                    ActiveLearned = h.ActiveLearned
-                }).ToList()
-            })
-            .ToList();
     }
 
 
@@ -150,40 +96,18 @@ public class WordRepository : IWordRepository
             : _dbContext.Words
                 .Where(w => w.LanguageId == languageId && w.ActiveLearnedPercent < percentThreshold);
 
-        var wordEntities = await wordsQuery
+        return await wordsQuery
             .OrderByDescending(w => Guid.NewGuid())
             .Take(top)
+            .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
             .ToListAsync(token);
-
-        return wordEntities
-            .Select(w => new WordDto
-            {
-                Id = w.Id,
-                LanguageId = w.LanguageId,
-                Name = w.Name,
-                TranslatedName = w.TranslatedName,
-                PassiveLearnedPercent = w.PassiveLearnedPercent,
-                ActiveLearnedPercent = w.ActiveLearnedPercent,
-                LastUpdated = w.LastUpdated
-            })
-            .ToList();
     }
 
     public async Task AddAsync(WordDto word, int languageId, CancellationToken token)
     {
-        await _dbContext.Words.AddAsync(
-            new Word
-            {
-                Name = word.Name.ToLower().Trim().Replace('ё', 'е'),
-                TranslatedName = word.TranslatedName.ToLower().Trim().Replace('ё', 'е'),
-                LanguageId = languageId,
-                PassiveLearnedPercent = 0,
-                ActiveLearnedPercent = 0,
-                LastUpdated = DateTime.UtcNow,
-                CreatedOn = DateTime.UtcNow
-            }, token);
-
-        await _dbContext.SaveChangesAsync(token);
+        var entity = _mapper.Map<Word>(word);
+        entity.LanguageId = languageId;
+        await _dbContext.Words.AddAsync(entity, token);
     }
 
     public async Task AddRangeAsync(IEnumerable<WordDto> words, int languageId, CancellationToken token)
@@ -191,16 +115,9 @@ public class WordRepository : IWordRepository
         using var transaction = await _dbContext.Database.BeginTransactionAsync(token);
         try
         {
-            var wordEntities = words.Select(word => new Word
-            {
-                Name = word.Name.ToLower().Trim().Replace('ё', 'е'),
-                TranslatedName = word.TranslatedName.ToLower().Trim().Replace('ё', 'е'),
-                LanguageId = languageId,
-                PassiveLearnedPercent = 0,
-                ActiveLearnedPercent = 0,
-                LastUpdated = DateTime.UtcNow,
-                CreatedOn = DateTime.UtcNow
-            }).ToList();
+            var wordEntities = _mapper.Map<List<Word>>(words);
+
+            foreach (var word in wordEntities) word.LanguageId = languageId; // Set externally passed value
 
             await _dbContext.AddRangeAsync(wordEntities, token);
             await _dbContext.SaveChangesAsync(token);

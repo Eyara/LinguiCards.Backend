@@ -6,8 +6,8 @@ namespace LinguiCards.Application.Commands.UserSetting.AddOrUpdateUserSettingCom
 
 public class AddOrUpdateUserSettingCommandHandler : IRequestHandler<AddOrUpdateUserSettingCommand>
 {
-    private readonly IUsersRepository _usersRepository;
     private readonly IUserSettingRepository _userSettingRepository;
+    private readonly IUsersRepository _usersRepository;
 
     public AddOrUpdateUserSettingCommandHandler(IUsersRepository usersRepository,
         IUserSettingRepository userSettingRepository)

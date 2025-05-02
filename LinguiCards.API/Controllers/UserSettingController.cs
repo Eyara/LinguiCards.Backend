@@ -26,7 +26,7 @@ public class UserSettingController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new GetUserSettingQuery(username));
     }
-    
+
     [HttpPost]
     public async Task Post(int activeTrainingSize, int passiveTrainingSize)
     {

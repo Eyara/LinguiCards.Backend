@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguiCards.Infrastructure"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguiCards.Application", "LinguiCards.Application\LinguiCards.Application.csproj", "{53B38B4C-B664-436A-88E6-561A841CDCD5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguiCards.AutoMapper", "LinguiCards.AutoMapper\LinguiCards.AutoMapper.csproj", "{4FED82D5-2D83-4BCC-9C44-61FD99E8280A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{53B38B4C-B664-436A-88E6-561A841CDCD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53B38B4C-B664-436A-88E6-561A841CDCD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53B38B4C-B664-436A-88E6-561A841CDCD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FED82D5-2D83-4BCC-9C44-61FD99E8280A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FED82D5-2D83-4BCC-9C44-61FD99E8280A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FED82D5-2D83-4BCC-9C44-61FD99E8280A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FED82D5-2D83-4BCC-9C44-61FD99E8280A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

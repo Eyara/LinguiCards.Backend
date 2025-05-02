@@ -1,4 +1,5 @@
-﻿using LinguiCards.Application.Common.Interfaces;
+﻿using AutoMapper;
+using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -8,14 +9,15 @@ namespace LinguiCards.Infrastructure.Repository;
 public class UserSettingRepository : IUserSettingRepository
 {
     private readonly LinguiCardsDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public UserSettingRepository(LinguiCardsDbContext dbContext)
+    public UserSettingRepository(LinguiCardsDbContext dbContext, IMapper mapper)
     {
         _dbContext = dbContext;
+        _mapper = mapper;
     }
 
-    public async Task AddOrUpdateAsync(int userId, int activeTrainingSize, int passiveTrainingSize,
-        CancellationToken token)
+    public async Task AddOrUpdateAsync(int userId, int activeTrainingSize, int passiveTrainingSize, CancellationToken token)
     {
         var userSetting = await _dbContext.UserSettings
             .FirstOrDefaultAsync(us => us.UserId == userId, token);
@@ -24,33 +26,31 @@ public class UserSettingRepository : IUserSettingRepository
         {
             userSetting.ActiveTrainingSize = activeTrainingSize;
             userSetting.PassiveTrainingSize = passiveTrainingSize;
-            _dbContext.UserSettings.Update(userSetting);
         }
         else
         {
-            userSetting = new UserSetting
+            var dto = new UserSettingDto
             {
                 UserId = userId,
                 ActiveTrainingSize = activeTrainingSize,
                 PassiveTrainingSize = passiveTrainingSize
             };
-            await _dbContext.UserSettings.AddAsync(userSetting, token);
+
+            var newSetting = _mapper.Map<UserSetting>(dto);
+            await _dbContext.UserSettings.AddAsync(newSetting, token);
         }
 
         await _dbContext.SaveChangesAsync(token);
     }
 
+
     public async Task<UserSettingDto?> GetByUserIdAsync(int userId, CancellationToken token)
     {
-        return await _dbContext.UserSettings
-            .Where(us => us.UserId == userId)
-            .Select(us => new UserSettingDto
-            {
-                Id = us.Id,
-                UserId = us.UserId,
-                ActiveTrainingSize = us.ActiveTrainingSize,
-                PassiveTrainingSize = us.PassiveTrainingSize
-            })
-            .FirstOrDefaultAsync(token);
+        var entity = await _dbContext.UserSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(us => us.UserId == userId, token);
+
+        return entity == null ? null : _mapper.Map<UserSettingDto>(entity);
     }
+
 }

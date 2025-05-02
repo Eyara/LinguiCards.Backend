@@ -1,7 +1,9 @@
 using System.Reflection;
 using System.Text;
+using AutoMapper;
 using LinguiCards.Application.Commands.User.AddUserCommand;
 using LinguiCards.Application.Middlewares;
+using LinguiCards.AutoMapper.Profiles;
 using LinguiCards.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +41,9 @@ builder.Services.AddDbContext<LinguiCardsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(AddUserCommand).GetTypeInfo().Assembly));
+
+builder.Services.AddAutoMapper(typeof(WordProfile).Assembly);
+
 
 builder.Services.AddAuthorization();
 
@@ -83,6 +88,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+using (var scope = app.Services.CreateScope())
+{
+    var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
+    mapper.ConfigurationProvider.AssertConfigurationIsValid();
+}
+
 
 app.UseAuthentication();
 

@@ -5,9 +5,9 @@ public class TrainingWord : WordDto
     public Guid TrainingId { get; set; }
     public TrainingType Type { get; set; }
     public List<string> Options { get; set; }
-    
+
     public List<string> ConnectionTargets { get; set; }
-    
+
     public List<WordConnection> ConnectionMatches { get; set; }
 }
 

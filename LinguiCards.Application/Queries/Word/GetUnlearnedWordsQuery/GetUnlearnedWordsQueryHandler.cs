@@ -11,9 +11,9 @@ namespace LinguiCards.Application.Queries.Word.GetUnlearnedWordsQuery;
 public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQuery, List<TrainingWord>>
 {
     private readonly ILanguageRepository _languageRepository;
+    private readonly IUserSettingRepository _userSettingRepository;
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
-    private readonly IUserSettingRepository _userSettingRepository;
 
     public GetUnlearnedWordsQueryHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
         IWordRepository wordRepository, IUserSettingRepository userSettingRepository)
@@ -97,7 +97,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             var type = GetTrainingType(i, count, vocabularyType);
             List<string>? options = null;
             List<string>? connectionTargets = null;
-            List<WordConnection> connectionMatches = new List<WordConnection>();
+            var connectionMatches = new List<WordConnection>();
 
             if (vocabularyType == VocabularyType.Passive)
             {
@@ -113,7 +113,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                     connectionTargets.Add(words[i].Name);
                     connectionTargets = connectionTargets.OrderBy(_ => Guid.NewGuid()).ToList();
 
-                    connectionMatches.Add(new WordConnection()
+                    connectionMatches.Add(new WordConnection
                     {
                         Id = words[i].Id,
                         Type = type,
@@ -122,8 +122,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                         TrainingId = trainingId
                     });
                     foreach (var randomWord in randomWords)
-                    {
-                        connectionMatches.Add(new WordConnection()
+                        connectionMatches.Add(new WordConnection
                         {
                             Id = randomWord.Id,
                             Type = type,
@@ -131,7 +130,6 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
                             TranslatedName = randomWord.TranslatedName,
                             TrainingId = trainingId
                         });
-                    }
 
                     options = randomWords.Select(w => w.TranslatedName).ToList();
                     options.Add(words[i].TranslatedName);
@@ -286,24 +284,18 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     {
         var existingWord =
             allWords.FirstOrDefault(w => checkPrimary ? w.Name == primaryName : w.TranslatedName == primaryName);
-        if (existingWord == null)
-        {
-            return primaryName;
-        }
+        if (existingWord == null) return primaryName;
 
         var length = Math.Min(primaryName.Length, fallbackName.Length);
         var modifiedName = primaryName;
 
-        for (int i = 1; i < length; i++)
+        for (var i = 1; i < length; i++)
         {
             var substring = fallbackName.Substring(0, i);
             modifiedName = $"{primaryName} ({substring})";
 
             var isUnique = !allWords.Any(w => checkPrimary ? w.Name == modifiedName : w.TranslatedName == modifiedName);
-            if (isUnique)
-            {
-                return modifiedName;
-            }
+            if (isUnique) return modifiedName;
         }
 
         return primaryName;
