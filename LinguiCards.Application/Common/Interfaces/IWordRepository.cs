@@ -14,7 +14,7 @@ public interface IWordRepository
     Task<List<WordExtendedDTO>> GetAllExtendedAsync(int languageId, CancellationToken token);
 
     Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, VocabularyType type,
-        CancellationToken token, int top = 15);
+        CancellationToken token, int? top = 15);
 
     Task AddAsync(WordDto word, int languageId, CancellationToken token);
     Task AddRangeAsync(IEnumerable<WordDto> words, int languageId, CancellationToken token);

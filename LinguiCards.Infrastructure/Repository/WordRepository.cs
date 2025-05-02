@@ -88,7 +88,7 @@ public class WordRepository : IWordRepository
 
 
     public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, VocabularyType type,
-        CancellationToken token, int top = 15)
+        CancellationToken token, int? top = 15)
     {
         var wordsQuery = type == VocabularyType.Passive
             ? _dbContext.Words
@@ -96,9 +96,13 @@ public class WordRepository : IWordRepository
             : _dbContext.Words
                 .Where(w => w.LanguageId == languageId && w.ActiveLearnedPercent < percentThreshold);
 
+        wordsQuery = wordsQuery
+            .OrderByDescending(w => Guid.NewGuid());
+        
+        if (top.HasValue)
+            wordsQuery = wordsQuery.Take(top.Value);
+
         return await wordsQuery
-            .OrderByDescending(w => Guid.NewGuid())
-            .Take(top)
             .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
             .ToListAsync(token);
     }

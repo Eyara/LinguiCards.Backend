@@ -38,11 +38,11 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         var unlearnedPassiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
             LearningSettings.LearnThreshold, VocabularyType.Passive,
-            cancellationToken);
+            cancellationToken, null);
 
         var unlearnedActiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
             LearningSettings.LearnThreshold, VocabularyType.Active,
-            cancellationToken);
+            cancellationToken, null);
 
         await UpdateLearnLevel(
             unlearnedPassiveWords,

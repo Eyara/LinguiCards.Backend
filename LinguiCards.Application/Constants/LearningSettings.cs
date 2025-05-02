@@ -1,6 +1,5 @@
 ﻿namespace LinguiCards.Application.Constants;
 
-// TODO: brainstorm about moving it to User Settings in db
 public static class LearningSettings
 {
     public static readonly int LearnStep = 10;
