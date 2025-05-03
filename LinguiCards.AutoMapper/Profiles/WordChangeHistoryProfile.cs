@@ -13,7 +13,6 @@ public class WordChangeHistoryProfile : Profile
             .ForMember(dest => dest.Answer, opt => opt.MapFrom(src => src.Answer))
             .ForMember(dest => dest.ChangedOn, opt => opt.MapFrom(src => src.ChangedOn))
             .ReverseMap()
-            .ForMember(dest => dest.Word, opt => opt.Ignore())
-            .ForMember(dest => dest.TrainingId, opt => opt.Ignore());
+            .ForMember(dest => dest.Word, opt => opt.Ignore());
     }
 }

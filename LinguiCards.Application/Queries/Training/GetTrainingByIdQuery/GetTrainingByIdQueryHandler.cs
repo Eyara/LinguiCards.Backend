@@ -16,6 +16,6 @@ public class GetTrainingByIdQueryHandler : IRequestHandler<GetTrainingByIdQuery,
     public async Task<List<WordChangeHistoryDTO>> Handle(GetTrainingByIdQuery request,
         CancellationToken cancellationToken)
     {
-        return await _historyRepository.GetAllById(request.TrainingId, cancellationToken);
+        return await _historyRepository.GetAllByIdAsync(request.TrainingId, cancellationToken);
     }
 }

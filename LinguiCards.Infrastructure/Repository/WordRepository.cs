@@ -22,11 +22,22 @@ public class WordRepository : IWordRepository
     public async Task<WordDto> GetByIdAsync(int wordId, CancellationToken token)
     {
         var wordEntity = await _dbContext.Words
-            .FirstOrDefaultAsync(l => l.Id == wordId, token);
+            .FirstOrDefaultAsync(w => w.Id == wordId, token);
 
         if (wordEntity == null) return null;
 
         return _mapper.Map<WordDto>(wordEntity);
+    }
+    
+    public async Task<WordExtendedDTO> GetByIdExtendedAsync(int wordId, CancellationToken token)
+    {
+        var wordEntity = await _dbContext.Words
+            .Include(w => w.Histories)
+            .FirstOrDefaultAsync(w => w.Id == wordId, token);
+
+        if (wordEntity == null) return null;
+
+        return _mapper.Map<WordExtendedDTO>(wordEntity);
     }
 
     public async Task<WordDto> GetByNameAndLanguageIdAsync(int languageId, string name, CancellationToken token)

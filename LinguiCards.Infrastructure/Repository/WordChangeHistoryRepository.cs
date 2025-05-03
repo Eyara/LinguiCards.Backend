@@ -46,7 +46,7 @@ public class WordChangeHistoryRepository : IWordChangeHistoryRepository
         await _dbContext.SaveChangesAsync(token);
     }
 
-    public async Task<List<WordChangeHistoryDTO>> GetAllById(Guid trainingId, CancellationToken token)
+    public async Task<List<WordChangeHistoryDTO>> GetAllByIdAsync(Guid trainingId, CancellationToken token)
     {
         return await _dbContext.WordChangeHistories
             .Where(h => h.TrainingId == trainingId)

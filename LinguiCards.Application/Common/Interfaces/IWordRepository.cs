@@ -5,6 +5,7 @@ namespace LinguiCards.Application.Common.Interfaces;
 public interface IWordRepository
 {
     Task<WordDto> GetByIdAsync(int wordId, CancellationToken token);
+    Task<WordExtendedDTO> GetByIdExtendedAsync(int wordId, CancellationToken token);
     Task<WordDto> GetByNameAndLanguageIdAsync(int languageId, string name, CancellationToken token);
     Task<List<WordDto>> GetAllAsync(int languageId, CancellationToken token);
 

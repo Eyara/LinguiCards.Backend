@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using LinguiCards.Application.Commands.Word.AddWordCommand;
 using LinguiCards.Application.Commands.Word.AddWordListCommand;
+using LinguiCards.Application.Commands.Word.ChallengeAnswerCommand;
 using LinguiCards.Application.Commands.Word.DeleteWordCommand;
 using LinguiCards.Application.Commands.Word.UpdateLearnLevelCommand;
 using LinguiCards.Application.Commands.Word.UpdateWordCommand;
@@ -73,6 +74,14 @@ public class WordController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name);
         return await _mediator.Send(new UpdateLearnLevelCommand(wordId, trainingType, wasSuccessful, trainingId, answer, hintCount,
             username));
+    }
+    
+    [Route("challenge")]
+    [HttpPatch]
+    public async Task<bool> Challenge(int wordId, Guid trainingId)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        return await _mediator.Send(new ChallengeAnswerCommand(wordId, trainingId, username));
     }
 
     [HttpDelete]

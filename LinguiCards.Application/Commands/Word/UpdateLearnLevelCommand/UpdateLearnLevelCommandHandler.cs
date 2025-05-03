@@ -56,8 +56,8 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
             newLevelPercent -=
                 (double)hintCount /
                 (request.TrainingType == TrainingType.WritingFromNativeLanguage
-                    ? wordEntity.TranslatedName.Length
-                    : wordEntity.Name.Length) * LearningSettings.LearnStep;
+                    ? wordEntity.Name.Length
+                    : wordEntity.TranslatedName.Length) * LearningSettings.LearnStep;
         }
 
         newLevelPercent = Math.Max(newLevelPercent, 0);
@@ -98,8 +98,8 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 
     private string GetAnswerByTrainingType(WordDto word, TrainingType type)
     {
-        if (TrainingTypesHelper.IsFromLearnTraining(type)) return word.TranslatedName;
+        if (TrainingTypesHelper.IsFromLearnTraining(type)) return word.Name;
 
-        return word.Name;
+        return word.TranslatedName;
     }
 }
