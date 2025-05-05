@@ -2,9 +2,12 @@ using System.Reflection;
 using System.Text;
 using AutoMapper;
 using LinguiCards.Application.Commands.User.AddUserCommand;
+using LinguiCards.Application.Common.Interfaces;
+using LinguiCards.Application.Common.Options;
 using LinguiCards.Application.Middlewares;
 using LinguiCards.AutoMapper.Profiles;
 using LinguiCards.Infrastructure;
+using LinguiCards.Infrastructure.Integration.OpenAI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -44,6 +47,8 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(Add
 
 builder.Services.AddAutoMapper(typeof(WordProfile).Assembly);
 
+builder.Services.Configure<OpenAIOptions>(builder.Configuration.GetSection("OpenAI"));
+builder.Services.AddHttpClient<IOpenAIService, OpenAIClient>();
 
 builder.Services.AddAuthorization();
 
