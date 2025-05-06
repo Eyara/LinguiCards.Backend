@@ -40,6 +40,11 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
 builder.Services.AddDbContext<LinguiCardsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
