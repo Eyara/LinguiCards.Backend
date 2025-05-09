@@ -28,7 +28,7 @@ public class WordRepository : IWordRepository
 
         return _mapper.Map<WordDto>(wordEntity);
     }
-    
+
     public async Task<WordExtendedDTO> GetByIdExtendedAsync(int wordId, CancellationToken token)
     {
         var wordEntity = await _dbContext.Words
@@ -54,6 +54,16 @@ public class WordRepository : IWordRepository
     {
         return await _dbContext.Words
             .Where(w => w.LanguageId == languageId)
+            .OrderByDescending(w => w.ActiveLearnedPercent)
+            .ThenByDescending(w => w.PassiveLearnedPercent)
+            .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(token);
+    }
+
+    public async Task<List<WordDto>> GetAllToRecalculateAsync(int languageId, CancellationToken token)
+    {
+        return await _dbContext.Words
+            .Where(w => w.LanguageId == languageId && (!w.LastUpdated.HasValue || w.LastUpdated.Value < DateTime.UtcNow.Date))
             .OrderByDescending(w => w.ActiveLearnedPercent)
             .ThenByDescending(w => w.PassiveLearnedPercent)
             .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
@@ -109,7 +119,7 @@ public class WordRepository : IWordRepository
 
         wordsQuery = wordsQuery
             .OrderByDescending(w => Guid.NewGuid());
-        
+
         if (top.HasValue)
             wordsQuery = wordsQuery.Take(top.Value);
 

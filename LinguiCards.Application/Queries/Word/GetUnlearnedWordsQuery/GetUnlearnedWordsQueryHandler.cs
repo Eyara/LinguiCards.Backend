@@ -36,22 +36,16 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
-        var unlearnedPassiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
-            LearningSettings.LearnThreshold, VocabularyType.Passive,
-            cancellationToken, null);
-
-        var unlearnedActiveWords = await _wordRepository.GetUnlearned(request.LanguageId,
-            LearningSettings.LearnThreshold, VocabularyType.Active,
-            cancellationToken, null);
+        var allWords = await _wordRepository.GetAllToRecalculateAsync(request.LanguageId, cancellationToken);
 
         await UpdateLearnLevel(
-            unlearnedPassiveWords,
+            allWords,
             VocabularyType.Passive,
             cancellationToken
         );
 
         await UpdateLearnLevel(
-            unlearnedActiveWords,
+            allWords,
             VocabularyType.Active,
             cancellationToken
         );
