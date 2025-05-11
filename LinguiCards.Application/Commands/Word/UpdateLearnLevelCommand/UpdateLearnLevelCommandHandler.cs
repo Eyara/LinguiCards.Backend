@@ -99,8 +99,8 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 
     private string GetAnswerByTrainingType(WordDto word, TrainingType type)
     {
-        if (TrainingTypesHelper.IsFromLearnTraining(type)) return word.Name;
+        if (TrainingTypesHelper.IsFromLearnTraining(type)) return word.TranslatedName;
 
-        return word.TranslatedName;
+        return word.Name;
     }
 }
