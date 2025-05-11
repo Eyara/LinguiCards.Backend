@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using System.Text;
 using AutoMapper;
@@ -10,6 +11,7 @@ using LinguiCards.Infrastructure;
 using LinguiCards.Infrastructure.Integration.OpenAI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -53,7 +55,24 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(Add
 builder.Services.AddAutoMapper(typeof(WordProfile).Assembly);
 
 builder.Services.Configure<OpenAIOptions>(builder.Configuration.GetSection("OpenAI"));
-builder.Services.AddHttpClient<IOpenAIService, OpenAIClient>();
+builder.Services.Configure<ProxyOptions>(builder.Configuration.GetSection("Proxy"));
+
+builder.Services.AddHttpClient<IOpenAIService, OpenAIClient>()
+    .ConfigurePrimaryHttpMessageHandler(sp =>
+    {
+        var proxyOptions = sp.GetRequiredService<IOptions<ProxyOptions>>().Value;
+
+        var proxy = new WebProxy(proxyOptions.Address)
+        {
+            Credentials = new NetworkCredential(proxyOptions.Username, proxyOptions.Password)
+        };
+
+        return new HttpClientHandler
+        {
+            Proxy = proxy,
+            UseProxy = true
+        };
+    });
 
 builder.Services.AddAuthorization();
 

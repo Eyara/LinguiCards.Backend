@@ -133,6 +133,7 @@ public class WordRepository : IWordRepository
         var entity = _mapper.Map<Word>(word);
         entity.LanguageId = languageId;
         await _dbContext.Words.AddAsync(entity, token);
+        await _dbContext.SaveChangesAsync(token);
     }
 
     public async Task AddRangeAsync(IEnumerable<WordDto> words, int languageId, CancellationToken token)
