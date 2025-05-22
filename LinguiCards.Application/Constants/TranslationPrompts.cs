@@ -3,19 +3,30 @@
 public static class TranslationPrompts
 {
     private const string GetTextPrompt =
-        @"Сыграем в игру. Я даю тебе язык, размер, уровень и (опционально) тему текста. Ты мне выдаешь текст согласно условиям, БЕЗ ДОПОЛНИТЕЛЬНЫХ СЛОВ. {0}. {1} предложение. Уровень {2}. Тема: {3}.";
+        @"Сгенерируй текст по заданным условиям. Без вступлений и пояснений.
+Язык: {0}
+Слов: {1}
+Уровень: {2}
+Тема: {3} (если пусто — игнорируй)";
+
 
     private const string EvaluationTranslationPrompt = @"
-        Сыграем в игру. Я даю тебе перевод, ты его оцениваешь, отвечая в формате: ""Точность перевода: N %. Правильный перевод: *перевод*. Неточности: *указываешь*. Ошибки: *указываешь*. Грубые ошибки: *указываешь*"". И ничего кроме этого!
-        Если неточностей или ошибок нет - пиши ""нет"" в соответствующей графе.
-        {0}. Уровень {1}.        
-        Оригинальный текст: {2}
-        Перевод: {3}
-    """;
+Оцени перевод. Ответ строго в следующем формате:
+Точность перевода: N %. 
+Правильный перевод: *укажи правильный вариант*. 
+Неточности: *если есть, перечисли*. 
+Ошибки: *если есть, перечисли*. 
+Грубые ошибки: *если есть, перечисли*. 
+Если чего-то нет — пиши ""нет"". Никакого дополнительного текста.
 
-    public static string GetStartGamePrompt(string language, int sentenceCount, string level, string topic)
+Язык: {0}. Уровень: {1}.        
+Оригинальный текст: {2}
+Перевод: {3}";
+
+
+    public static string GetStartGamePrompt(string language, int wordLength, string level, string topic)
     {
-        return string.Format(GetTextPrompt, language, sentenceCount, level, topic);
+        return string.Format(GetTextPrompt, language, wordLength, level, topic);
     }
 
     public static string GetEvaluationTranslationPrompt(string language, string level, string originalText,
