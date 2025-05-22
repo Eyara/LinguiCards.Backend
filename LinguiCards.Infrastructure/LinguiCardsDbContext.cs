@@ -17,6 +17,7 @@ public class LinguiCardsDbContext : DbContext
     public DbSet<DefaultCrib> DefaultCribs { get; set; }
     public DbSet<CribDescription> CribDescriptions { get; set; }
     public DbSet<UserSetting> UserSettings { get; set; }
+    public DbSet<TranslationEvaluationHistory> TranslationEvaluationHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -108,6 +109,19 @@ public class LinguiCardsDbContext : DbContext
             .HasOne(us => us.User)
             .WithOne(u => u.UserSetting)
             .HasForeignKey<UserSetting>(u => u.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TranslationEvaluationHistory>()
+            .HasKey(us => us.Id);
+
+        modelBuilder.Entity<TranslationEvaluationHistory>()
+            .Property(l => l.Id)
+            .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<TranslationEvaluationHistory>()
+            .HasOne(t => t.User)
+            .WithMany(u => u.TranslationEvaluationHistories)
+            .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
