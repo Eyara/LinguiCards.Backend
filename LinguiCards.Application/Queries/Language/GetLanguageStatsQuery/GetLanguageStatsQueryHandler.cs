@@ -11,13 +11,15 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
     private readonly ILanguageRepository _languageRepository;
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
+    private readonly IRedisCacheService _redisCacheService;
 
     public GetLanguageStatsQueryHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
-        IWordRepository wordRepository)
+        IWordRepository wordRepository, IRedisCacheService redisCacheService)
     {
         _languageRepository = languageRepository;
         _usersRepository = usersRepository;
         _wordRepository = wordRepository;
+        _redisCacheService = redisCacheService;
     }
 
     public async Task<LanguageDashboardStat> Handle(GetLanguageStatsQuery request, CancellationToken cancellationToken)
@@ -55,7 +57,8 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
             BestActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, true),
             WorstActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, false),
             BestPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, true),
-            WorstPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, false)
+            WorstPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, false),
+            WordOfTheDay = await GetWordAsync(user.Id, request.LanguageId, cancellationToken)
         };
     }
 
@@ -134,5 +137,45 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
         if (!relevantHistories.Any()) return 0;
 
         return relevantHistories.Count(h => h.IsCorrectAnswer) / (double)relevantHistories.Count;
+    }
+    
+    private async Task<string> GetWordAsync(int userId, int languageId, CancellationToken cancellationToken)
+    {
+        var key = $"word_of_the_day:{userId}:{languageId}";
+        var word = await _redisCacheService.GetAsync<string>(key);
+
+        if (word is not null)
+            return word;
+
+        var unlearnedWords = await _wordRepository.GetUnlearned(
+            languageId,
+            LearningSettings.LearnThreshold,
+            VocabularyType.Passive,
+            cancellationToken
+        );
+
+        var datePart = DateTime.UtcNow.Date.ToString("yyyyMMdd");
+        var seedString = $"{userId}:{languageId}:{datePart}";
+        var seed = GetDeterministicHashCode(seedString);
+
+        var random = new Random(seed);
+        var selected = unlearnedWords[random.Next(unlearnedWords.Count)];
+
+        var now = DateTime.Now;
+        var untilMidnight = now.Date.AddDays(1) - now;
+        await _redisCacheService.SetAsync(key, selected.Name, untilMidnight);
+
+        return selected.Name;
+    }
+    
+    private static int GetDeterministicHashCode(string input)
+    {
+        unchecked
+        {
+            var hash = 23;
+            foreach (char c in input)
+                hash = hash * 31 + c;
+            return hash;
+        }
     }
 }

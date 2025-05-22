@@ -8,12 +8,14 @@ using LinguiCards.Application.Common.Options;
 using LinguiCards.Application.Middlewares;
 using LinguiCards.AutoMapper.Profiles;
 using LinguiCards.Infrastructure;
+using LinguiCards.Infrastructure.Integration.Caching;
 using LinguiCards.Infrastructure.Integration.OpenAI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +75,18 @@ builder.Services.AddHttpClient<IOpenAIService, OpenAIClient>()
             UseProxy = true
         };
     });
+
+builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection("Redis"));
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisOptions = sp.GetRequiredService<IOptions<RedisOptions>>().Value;
+    var config = ConfigurationOptions.Parse(redisOptions.GetConnectionString());
+    config.AbortOnConnectFail = false;
+    return ConnectionMultiplexer.Connect(config);
+});
+
+builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
 
 builder.Services.AddAuthorization();
 
