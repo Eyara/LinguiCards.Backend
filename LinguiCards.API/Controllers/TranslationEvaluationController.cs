@@ -37,6 +37,7 @@ public class TranslationEvaluationController : ControllerBase
     [HttpGet]
     public async Task<TranslationEvaluationDTO> GetTranslationEvaluation(string level, string originalText, string translation)
     {
-        return await _mediator.Send(new GetTranslationEvaluationQuery(level, originalText, translation));
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        return await _mediator.Send(new GetTranslationEvaluationQuery(username, level, originalText, translation));
     }
 }
