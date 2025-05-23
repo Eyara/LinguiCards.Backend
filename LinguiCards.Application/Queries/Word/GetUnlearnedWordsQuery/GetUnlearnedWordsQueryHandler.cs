@@ -14,14 +14,17 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     private readonly IUserSettingRepository _userSettingRepository;
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
+    private readonly IRedisCacheService _redisCacheService;
 
     public GetUnlearnedWordsQueryHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
-        IWordRepository wordRepository, IUserSettingRepository userSettingRepository)
+        IWordRepository wordRepository, IUserSettingRepository userSettingRepository,
+        IRedisCacheService redisCacheService)
     {
         _languageRepository = languageRepository;
         _usersRepository = usersRepository;
         _wordRepository = wordRepository;
         _userSettingRepository = userSettingRepository;
+        _redisCacheService = redisCacheService;
     }
 
     public async Task<List<TrainingWord>> Handle(GetUnlearnedWordsQuery request, CancellationToken cancellationToken)
@@ -65,9 +68,11 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         var trainingId = Guid.NewGuid();
 
         var trainingWordsPassive =
-            await GetTrainingWords(resultPassive, VocabularyType.Passive, trainingId, cancellationToken);
+            await GetTrainingWords(resultPassive, VocabularyType.Passive, trainingId, user.Id, languageEntity.Id,
+                cancellationToken);
         var trainingWordsActive =
-            await GetTrainingWords(resultActive, VocabularyType.Active, trainingId, cancellationToken);
+            await GetTrainingWords(resultActive, VocabularyType.Active, trainingId, user.Id, languageEntity.Id,
+                cancellationToken);
 
         result.AddRange(trainingWordsPassive);
         result.AddRange(trainingWordsActive);
@@ -76,9 +81,29 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     }
 
     private async Task<List<TrainingWord>> GetTrainingWords(List<WordDto> words, VocabularyType vocabularyType,
-        Guid trainingId,
+        Guid trainingId, int userId, int languageId,
         CancellationToken token)
     {
+        if (words.Count == 0) return new List<TrainingWord>();
+
+        WordDto wordOfTheDay;
+        try
+        {
+            wordOfTheDay = await GetWordOfTheDay(userId, languageId, token);
+        }
+        catch (WordNotFoundException)
+        {
+            wordOfTheDay = null;
+        }
+
+        if (wordOfTheDay != null && words.All(w => w.Id != wordOfTheDay.Id))
+            if ((vocabularyType == VocabularyType.Active && wordOfTheDay.ActiveLearnedPercent < 100) ||
+                (vocabularyType == VocabularyType.Passive && wordOfTheDay.PassiveLearnedPercent < 100))
+            {
+                var indexToReplace = Random.Shared.Next(words.Count);
+                words[indexToReplace] = wordOfTheDay;
+            }
+
         var count = words.Count;
         var result = new List<TrainingWord>();
 
@@ -178,6 +203,16 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
         }
 
         return result;
+    }
+
+    private async Task<WordDto> GetWordOfTheDay(int userId, int languageId, CancellationToken token)
+    {
+        var key = $"word_of_the_day:{userId}:{languageId}";
+        var wordName = await _redisCacheService.GetAsync<string>(key);
+
+        if (wordName is null) throw new WordNotFoundException();
+
+        return await _wordRepository.GetByNameAndLanguageIdAsync(languageId, wordName, token);
     }
 
     private async Task<List<string>> GetTrainingOptions(string targetOption, int languageId, TrainingType type,
