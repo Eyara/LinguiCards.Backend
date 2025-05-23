@@ -7,7 +7,8 @@ public static class TranslationPrompts
 Язык: {0}
 Слов: {1}
 Уровень: {2}
-Тема: {3} (если пусто — игнорируй)";
+Тема: {3} (если пусто — игнорируй)
+Обязательно включи слово: {4} (если пусто - игнорируй)";
 
 
     private const string EvaluationTranslationPrompt = @"
@@ -24,9 +25,9 @@ public static class TranslationPrompts
 Перевод: {3}";
 
 
-    public static string GetStartGamePrompt(string language, int wordLength, string level, string topic)
+    public static string GetTextForTranslationPrompt(string language, int wordLength, string level, string topic, string wordOfTheDay)
     {
-        return string.Format(GetTextPrompt, language, wordLength, level, topic);
+        return string.Format(GetTextPrompt, language, wordLength, level, topic, wordOfTheDay);
     }
 
     public static string GetEvaluationTranslationPrompt(string language, string level, string originalText,

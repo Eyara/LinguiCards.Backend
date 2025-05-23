@@ -21,9 +21,10 @@ public class TranslationEvaluationController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<string> GetTextForTranslation(int length, string level, string? topic = "")
+    public async Task<string> GetTextForTranslation(int languageId, int length, string level, string? topic = "")
     {
-        return await _mediator.Send(new GetTextForTranslationQuery(length, level, topic));
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        return await _mediator.Send(new GetTextForTranslationQuery(username, languageId, length, level, topic));
     }
 
     [Route("evaluation")]
