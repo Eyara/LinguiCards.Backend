@@ -207,7 +207,7 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
     private async Task<WordDto> GetWordOfTheDay(int userId, int languageId, CancellationToken token)
     {
-        var key = $"word_of_the_day:{userId}:{languageId}";
+        var key = RedisKeyHelper.GetWordOfTheDayKey(userId, languageId);
         var wordName = await _redisCacheService.GetAsync<string>(key);
 
         if (wordName is null) throw new WordNotFoundException();

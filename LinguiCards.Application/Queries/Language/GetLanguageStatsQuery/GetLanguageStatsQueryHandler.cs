@@ -2,6 +2,7 @@
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Constants;
+using LinguiCards.Application.Helpers;
 using MediatR;
 
 namespace LinguiCards.Application.Queries.Language.GetLanguageStatsQuery;
@@ -141,7 +142,7 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
     
     private async Task<string> GetWordAsync(int userId, int languageId, CancellationToken cancellationToken)
     {
-        var key = $"word_of_the_day:{userId}:{languageId}";
+        var key = RedisKeyHelper.GetWordOfTheDayKey(userId, languageId);
         var word = await _redisCacheService.GetAsync<string>(key);
 
         if (word is not null)

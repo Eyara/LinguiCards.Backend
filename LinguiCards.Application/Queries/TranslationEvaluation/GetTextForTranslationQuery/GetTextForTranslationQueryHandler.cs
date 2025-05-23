@@ -1,6 +1,7 @@
 ﻿using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Constants;
+using LinguiCards.Application.Helpers;
 using MediatR;
 
 namespace LinguiCards.Application.Queries.TranslationEvaluation.GetTextForTranslationQuery;
@@ -32,7 +33,7 @@ public class GetTextForTranslationQueryHandler : IRequestHandler<GetTextForTrans
 
         if (language == null) throw new LanguageNotFoundException();
 
-        var key = $"word_of_the_day:{user.Id}:{request.languageId}";
+        var key = RedisKeyHelper.GetWordOfTheDayKey(user.Id, request.languageId);
         var wordOfTheDay = await _redisCacheService.GetAsync<string>(key);
 
         return await _openAiService.GetChatResponseAsync(
