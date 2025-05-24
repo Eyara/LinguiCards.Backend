@@ -26,7 +26,7 @@ public class WordController : ControllerBase
         _mediator = mediator;
     }
 
-    [Route("/api/Language/{languageId}/Word")]
+    [Route("/api/Language/{LanguageId}/Word")]
     [HttpGet]
     public async Task<PaginatedResult<WordDto>> GetAllPaginated(int languageId, [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 15, [FromQuery] string nameFilterQuery = "", string translationNameFilterQuery = "")
@@ -44,7 +44,7 @@ public class WordController : ControllerBase
         return await _mediator.Send(new GetUnlearnedWordsQuery(languageId, username));
     }
 
-    [Route("/api/Language/{languageId}/Word")]
+    [Route("/api/Language/{LanguageId}/Word")]
     [HttpPost]
     public async Task<bool> Post(WordDto model, int languageId)
     {
@@ -52,7 +52,7 @@ public class WordController : ControllerBase
         return await _mediator.Send(new AddWordCommand(model, languageId, username));
     }
 
-    [Route("/api/Language/{languageId}/Words")]
+    [Route("/api/Language/{LanguageId}/Words")]
     [HttpPost]
     public async Task<bool> Post(IEnumerable<WordDto> words, int languageId)
     {

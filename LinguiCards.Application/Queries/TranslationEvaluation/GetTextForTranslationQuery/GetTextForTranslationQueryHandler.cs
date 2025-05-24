@@ -29,11 +29,11 @@ public class GetTextForTranslationQueryHandler : IRequestHandler<GetTextForTrans
 
         if (user == null) throw new UserNotFoundException();
 
-        var language = await _languageRepository.GetByIdAsync(request.languageId, cancellationToken);
+        var language = await _languageRepository.GetByIdAsync(request.LanguageId, cancellationToken);
 
         if (language == null) throw new LanguageNotFoundException();
 
-        var key = RedisKeyHelper.GetWordOfTheDayKey(user.Id, request.languageId);
+        var key = RedisKeyHelper.GetWordOfTheDayKey(user.Id, request.LanguageId);
         var wordOfTheDay = await _redisCacheService.GetAsync<string>(key);
 
         return await _openAiService.GetChatResponseAsync(
