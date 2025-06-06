@@ -14,4 +14,5 @@ public class User
     public virtual UserSetting UserSetting { get; set; }
     public virtual ICollection<TranslationEvaluationHistory> TranslationEvaluationHistories { get; set; } 
     public virtual ICollection<Language> Languages { get; set; }
+    public virtual ICollection<DailyGoal> DailyGoals { get; set; }
 }

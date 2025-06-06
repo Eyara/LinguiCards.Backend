@@ -18,6 +18,7 @@ public class LinguiCardsDbContext : DbContext
     public DbSet<CribDescription> CribDescriptions { get; set; }
     public DbSet<UserSetting> UserSettings { get; set; }
     public DbSet<TranslationEvaluationHistory> TranslationEvaluationHistories { get; set; }
+    public DbSet<DailyGoal> DailyGoals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -123,5 +124,27 @@ public class LinguiCardsDbContext : DbContext
             .WithMany(u => u.TranslationEvaluationHistories)
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<DailyGoal>(entity =>
+        {
+            entity.HasIndex(e => new { e.UserId, e.Date }).IsUnique();
+
+            entity.Property(e => e.GainedXp)
+                .HasDefaultValue(0);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAddOrUpdate();
+            
+            modelBuilder.Entity<DailyGoal>()
+                .HasOne(e => e.User)
+                .WithMany(u => u.DailyGoals)
+                .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
