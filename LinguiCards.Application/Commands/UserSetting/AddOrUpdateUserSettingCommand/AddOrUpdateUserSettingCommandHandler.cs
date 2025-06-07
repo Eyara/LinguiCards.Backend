@@ -22,7 +22,7 @@ public class AddOrUpdateUserSettingCommandHandler : IRequestHandler<AddOrUpdateU
 
         if (user == null) throw new UserNotFoundException();
 
-        await _userSettingRepository.AddOrUpdateAsync(user.Id, request.ActiveTrainingSize, request.PassiveTrainingSize,
+        await _userSettingRepository.AddOrUpdateAsync(user.Id, request.ActiveTrainingSize, request.PassiveTrainingSize, request.DailyGoalXp,
             cancellationToken);
     }
 }

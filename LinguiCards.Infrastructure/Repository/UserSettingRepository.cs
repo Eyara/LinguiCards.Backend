@@ -17,7 +17,7 @@ public class UserSettingRepository : IUserSettingRepository
         _mapper = mapper;
     }
 
-    public async Task AddOrUpdateAsync(int userId, int activeTrainingSize, int passiveTrainingSize, CancellationToken token)
+    public async Task AddOrUpdateAsync(int userId, int activeTrainingSize, int passiveTrainingSize, int? dailyGoalXp, CancellationToken token)
     {
         var userSetting = await _dbContext.UserSettings
             .FirstOrDefaultAsync(us => us.UserId == userId, token);
@@ -33,7 +33,8 @@ public class UserSettingRepository : IUserSettingRepository
             {
                 UserId = userId,
                 ActiveTrainingSize = activeTrainingSize,
-                PassiveTrainingSize = passiveTrainingSize
+                PassiveTrainingSize = passiveTrainingSize,
+                DailyGoalXp = dailyGoalXp
             };
 
             var newSetting = _mapper.Map<UserSetting>(dto);
