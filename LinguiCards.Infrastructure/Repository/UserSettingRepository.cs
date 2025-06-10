@@ -29,15 +29,13 @@ public class UserSettingRepository : IUserSettingRepository
         }
         else
         {
-            var dto = new UserSettingDto
+            var newSetting = new UserSetting
             {
                 UserId = userId,
                 ActiveTrainingSize = activeTrainingSize,
                 PassiveTrainingSize = passiveTrainingSize,
                 DailyGoalXp = dailyGoalXp
             };
-
-            var newSetting = _mapper.Map<UserSetting>(dto);
             await _dbContext.UserSettings.AddAsync(newSetting, token);
         }
 
