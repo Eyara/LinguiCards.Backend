@@ -2,7 +2,14 @@
 
 public class ProxyOptions
 {
-    public string Address { get; set; }
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public ProxyAddress AddressA { get; set; } = null!;
+    public ProxyAddress AddressB { get; set; } = null!;
+}
+
+public class ProxyAddress
+{
+    public string Host { get; set; } = null!;
+    public int Port { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }
