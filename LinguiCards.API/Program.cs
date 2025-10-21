@@ -1,4 +1,4 @@
-using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using AutoMapper;
@@ -7,6 +7,7 @@ using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Options;
 using LinguiCards.Application.Middlewares;
 using LinguiCards.AutoMapper.Profiles;
+using LinguiCards.Helpers;
 using LinguiCards.Infrastructure;
 using LinguiCards.Infrastructure.Integration.Caching;
 using LinguiCards.Infrastructure.Integration.OpenAI;
@@ -44,10 +45,7 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-if (builder.Environment.IsDevelopment())
-{
-    builder.Configuration.AddUserSecrets<Program>();
-}
+if (builder.Environment.IsDevelopment()) builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddDbContext<LinguiCardsDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -64,16 +62,34 @@ builder.Services.AddHttpClient<IOpenAIService, OpenAIClient>()
     {
         var proxyOptions = sp.GetRequiredService<IOptions<ProxyOptions>>().Value;
 
-        var proxy = new WebProxy(proxyOptions.Address)
+        var handler = new SocketsHttpHandler
         {
-            Credentials = new NetworkCredential(proxyOptions.Username, proxyOptions.Password)
+            ConnectCallback = async (context, cancellationToken) =>
+            {
+                var proxyA = proxyOptions.AddressA;
+                var proxyB = proxyOptions.AddressB;
+
+                var targetHost = context.DnsEndPoint.Host;
+                var targetPort = context.DnsEndPoint.Port;
+
+                // --- Connect to Proxy A ---
+                var tcp = new TcpClient();
+                await tcp.ConnectAsync(proxyA.Host, proxyA.Port, cancellationToken);
+                var stream = tcp.GetStream();
+
+                // --- Tunnel from Proxy A to Proxy B ---
+                await ProxyChainingHelper.SendConnect(stream, proxyB.Host, proxyB.Port, proxyA.Username,
+                    proxyA.Password, cancellationToken);
+
+                // --- Tunnel from Proxy B to Target ---
+                await ProxyChainingHelper.SendConnect(stream, targetHost, targetPort, proxyB.Username, proxyB.Password,
+                    cancellationToken);
+
+                return stream;
+            }
         };
 
-        return new HttpClientHandler
-        {
-            Proxy = proxy,
-            UseProxy = true
-        };
+        return handler;
     });
 
 builder.Services.Configure<RedisOptions>(builder.Configuration.GetSection("Redis"));
@@ -137,7 +153,6 @@ using (var scope = app.Services.CreateScope())
     var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
     mapper.ConfigurationProvider.AssertConfigurationIsValid();
 }
-
 
 app.UseAuthentication();
 
