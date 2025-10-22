@@ -26,6 +26,7 @@ public class UserSettingRepository : IUserSettingRepository
         {
             userSetting.ActiveTrainingSize = activeTrainingSize;
             userSetting.PassiveTrainingSize = passiveTrainingSize;
+            userSetting.DailyGoalXp = dailyGoalXp;
         }
         else
         {
