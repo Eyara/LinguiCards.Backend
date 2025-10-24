@@ -17,8 +17,7 @@ public class DailyGoalRepository : IDailyGoalRepository
         _mapper = mapper;
     }
 
-    public async Task AddOrUpdateAsync(int userId, int gainedXp, int targetXp, int? dailyGoalXp,
-        CancellationToken token)
+    public async Task AddOrUpdateAsync(int userId, int gainedXp, int targetXp, CancellationToken token)
     {
         var dailyGoal = await _dbContext.DailyGoals
             .FirstOrDefaultAsync(dg => dg.UserId == userId && dg.Date == DateOnly.FromDateTime(DateTime.Now), token);
