@@ -21,7 +21,7 @@ public class DailyGoalRepository : IDailyGoalRepository
         CancellationToken token)
     {
         var dailyGoal = await _dbContext.DailyGoals
-            .FirstOrDefaultAsync(us => us.UserId == userId, token);
+            .FirstOrDefaultAsync(dg => dg.UserId == userId && dg.Date == DateOnly.FromDateTime(DateTime.Now), token);
 
         if (dailyGoal != null)
         {
