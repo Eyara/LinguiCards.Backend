@@ -5,6 +5,7 @@ public class UserInfo
     public int Level { get; set; }
     public double Xp { get; set; }
     public double XpToNextLevel { get; set; }
+    public int DailyXp { get; set; }
     public List<LanguageStat> LanguageStats { get; set; }
 }
 

@@ -12,13 +12,15 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
     private readonly ILanguageRepository _languageRepository;
     private readonly IUsersRepository _usersRepository;
     private readonly IWordRepository _wordRepository;
+    private readonly IDailyGoalRepository _dailyGoalRepository;
 
     public GetUserInfoQueryHandler(IUsersRepository usersRepository, ILanguageRepository languageRepository,
-        IWordRepository wordRepository)
+        IWordRepository wordRepository, IDailyGoalRepository dailyGoalRepository)
     {
         _languageRepository = languageRepository;
         _usersRepository = usersRepository;
         _wordRepository = wordRepository;
+        _dailyGoalRepository = dailyGoalRepository;
     }
 
     public async Task<UserInfo> Handle(GetUserInfoQuery request, CancellationToken cancellationToken)
@@ -27,11 +29,13 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
 
         if (user == null) throw new UserNotFoundException();
 
+        var dailyGoal = await _dailyGoalRepository.GetTodayGoalByUserId(user.Id, cancellationToken);
 
         var info = new UserInfo
         {
             Xp = user.XP,
             XpToNextLevel = CalculatorXP.CalculateXpRequired(user.Level),
+            DailyXp = dailyGoal?.GainedXp ?? 0,
             Level = user.Level,
             LanguageStats = new List<LanguageStat>()
         };
