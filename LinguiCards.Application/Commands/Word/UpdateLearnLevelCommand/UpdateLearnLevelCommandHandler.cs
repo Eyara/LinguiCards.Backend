@@ -14,14 +14,17 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
     private readonly IUsersRepository _usersRepository;
     private readonly IWordChangeHistoryRepository _wordChangeHistoryRepository;
     private readonly IWordRepository _wordRepository;
+    private readonly IDailyGoalRepository _dailyGoalRepository;
 
     public UpdateLearnLevelCommandHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
-        IWordRepository wordRepository, IWordChangeHistoryRepository wordChangeHistoryRepository)
+        IWordRepository wordRepository, IWordChangeHistoryRepository wordChangeHistoryRepository,
+        IDailyGoalRepository dailyGoalRepository)
     {
         _languageRepository = languageRepository;
         _usersRepository = usersRepository;
         _wordRepository = wordRepository;
         _wordChangeHistoryRepository = wordChangeHistoryRepository;
+        _dailyGoalRepository = dailyGoalRepository;
     }
 
     public async Task<bool> Handle(UpdateLearnLevelCommand request, CancellationToken cancellationToken)
@@ -85,7 +88,8 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
     {
         var requiredXp = CalculatorXP.CalculateXpRequired(user.Level);
 
-        var newXp = user.XP + (isSuccess ? LearningSettings.SuccessXpStep : LearningSettings.FailXpStep);
+        var xpGained = isSuccess ? LearningSettings.SuccessXpStep : LearningSettings.FailXpStep;
+        var newXp = user.XP + xpGained;
         var newLevel = user.Level;
 
         if (newXp >= requiredXp)
@@ -95,6 +99,9 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         }
 
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
+        
+        // Update daily goal with XP delta
+        await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, token);
     }
 
     private string GetAnswerByTrainingType(WordDto word, TrainingType type)

@@ -14,13 +14,16 @@ public class
     private readonly IOpenAIService _openAiService;
     private readonly IUsersRepository _usersRepository;
     private readonly ITranslationEvaluationHistoryRepository _evaluationHistoryRepository;
+    private readonly IDailyGoalRepository _dailyGoalRepository;
 
     public EvaluateTranslationCommandHandler(IOpenAIService openAiService, IUsersRepository usersRepository,
-        ITranslationEvaluationHistoryRepository translationEvaluationHistoryRepository)
+        ITranslationEvaluationHistoryRepository translationEvaluationHistoryRepository,
+        IDailyGoalRepository dailyGoalRepository)
     {
         _openAiService = openAiService;
         _usersRepository = usersRepository;
         _evaluationHistoryRepository = translationEvaluationHistoryRepository;
+        _dailyGoalRepository = dailyGoalRepository;
     }
 
     public async Task<TranslationEvaluationDTO> Handle(EvaluateTranslationCommand request,
@@ -62,7 +65,8 @@ public class
         var requiredXp = CalculatorXP.CalculateXpRequired(user.Level);
 
         accuracyPercent = Math.Clamp(accuracyPercent, 0, 100);
-        var newXp = LearningSettings.SuccessXpStep * level * wordCount * (accuracyPercent / 100.0) + user.XP;
+        var xpGained = LearningSettings.SuccessXpStep * level * wordCount * (accuracyPercent / 100.0);
+        var newXp = xpGained + user.XP;
 
         var newLevel = user.Level;
 
@@ -73,5 +77,8 @@ public class
         }
 
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
+        
+        // Update daily goal with XP delta
+        await _dailyGoalRepository.AddXpAsync(user.Id, (int)xpGained, token);
     }
 }

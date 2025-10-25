@@ -30,7 +30,7 @@ public class AddOrUpdateDailyGoalCommandHandler : IRequestHandler<AddOrUpdateDai
 
         if (userSettings == null) throw new NotFoundException("Настройки пользователя не найдены");
 
-        await _dailyGoalRepository.AddOrUpdateAsync(user.Id, request.GainedXp, userSettings.DailyGoalXp ?? 0,
+        await _dailyGoalRepository.SetTotalXpAsync(user.Id, request.GainedXp, userSettings.DailyGoalXp ?? 0,
             cancellationToken);
     }
 }

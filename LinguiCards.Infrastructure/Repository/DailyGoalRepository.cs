@@ -17,14 +17,41 @@ public class DailyGoalRepository : IDailyGoalRepository
         _mapper = mapper;
     }
 
-    public async Task AddOrUpdateAsync(int userId, int gainedXp, int targetXp, CancellationToken token)
+    public async Task AddXpAsync(int userId, int xpDelta, CancellationToken token)
     {
         var dailyGoal = await _dbContext.DailyGoals
             .FirstOrDefaultAsync(dg => dg.UserId == userId && dg.Date == DateOnly.FromDateTime(DateTime.Now), token);
 
         if (dailyGoal != null)
         {
-            dailyGoal.GainedXp = gainedXp;
+            dailyGoal.GainedXp += xpDelta;
+        }
+        else
+        {
+            var newGoal = new DailyGoal
+            {
+                UserId = userId,
+                GainedXp = xpDelta,
+                TargetXp = 0,
+                Date = DateOnly.FromDateTime(DateTime.Now)
+            };
+            await _dbContext.DailyGoals.AddAsync(newGoal, token);
+        }
+
+        await _dbContext.SaveChangesAsync(token);
+    }
+
+    public async Task SetTotalXpAsync(int userId, int totalXp, int targetXp, CancellationToken token)
+    {
+        var dailyGoal = await _dbContext.DailyGoals
+            .FirstOrDefaultAsync(dg => dg.UserId == userId && dg.Date == DateOnly.FromDateTime(DateTime.Now), token);
+
+        if (dailyGoal != null)
+        {
+            if (totalXp > dailyGoal.GainedXp)
+            {
+                dailyGoal.GainedXp = totalXp;
+            }
             dailyGoal.TargetXp = targetXp;
         }
         else
@@ -32,7 +59,7 @@ public class DailyGoalRepository : IDailyGoalRepository
             var newGoal = new DailyGoal
             {
                 UserId = userId,
-                GainedXp = gainedXp,
+                GainedXp = totalXp,
                 TargetXp = targetXp,
                 Date = DateOnly.FromDateTime(DateTime.Now)
             };
