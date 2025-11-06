@@ -18,5 +18,5 @@ public class WordChangeHistory
 
     public int WordId { get; set; }
 
-    public virtual Word Word { get; set; }
+    public Word Word { get; set; }
 }

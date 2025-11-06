@@ -13,7 +13,7 @@ public class Word
 
     public int LanguageId { get; set; }
 
-    public virtual Language Language { get; set; }
+    public Language Language { get; set; }
 
     public ICollection<WordChangeHistory> Histories { get; set; }
 }

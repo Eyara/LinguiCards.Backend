@@ -19,6 +19,7 @@ public class LinguiCardsDbContext : DbContext
     public DbSet<UserSetting> UserSettings { get; set; }
     public DbSet<TranslationEvaluationHistory> TranslationEvaluationHistories { get; set; }
     public DbSet<DailyGoal> DailyGoals { get; set; }
+    public DbSet<GrammarTaskHistory> GrammarTaskHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -143,7 +144,25 @@ public class LinguiCardsDbContext : DbContext
             modelBuilder.Entity<DailyGoal>()
                 .HasOne(e => e.User)
                 .WithMany(u => u.DailyGoals)
-                .HasForeignKey(l => l.UserId)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<GrammarTaskHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Id)
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAdd();
+            
+            modelBuilder.Entity<GrammarTaskHistory>()
+                .HasOne(e => e.User)
+                .WithMany(u => u.GrammarTaskHistories)
+                .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

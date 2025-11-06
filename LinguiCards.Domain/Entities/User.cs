@@ -11,8 +11,9 @@ public class User
     public double XP { get; set; }
 
     public int? UserSettingId { get; set; }
-    public virtual UserSetting UserSetting { get; set; }
-    public virtual ICollection<TranslationEvaluationHistory> TranslationEvaluationHistories { get; set; } 
-    public virtual ICollection<Language> Languages { get; set; }
-    public virtual ICollection<DailyGoal> DailyGoals { get; set; }
+    public UserSetting UserSetting { get; set; }
+    public ICollection<TranslationEvaluationHistory> TranslationEvaluationHistories { get; set; } 
+    public ICollection<Language> Languages { get; set; }
+    public ICollection<DailyGoal> DailyGoals { get; set; }
+    public ICollection<GrammarTaskHistory> GrammarTaskHistories { get; set; }
 }

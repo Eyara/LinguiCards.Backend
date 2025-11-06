@@ -6,5 +6,5 @@ public class LanguageDictionary
     public string Name { get; set; }
     public string Url { get; set; }
 
-    public virtual ICollection<Language> Languages { get; set; }
+    public ICollection<Language> Languages { get; set; }
 }

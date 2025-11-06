@@ -29,5 +29,5 @@ public class DailyGoal
     [Required]
     public DateTime UpdatedAt { get; set; }
     
-    public virtual User User { get; set; }
+    public User User { get; set; }
 }
