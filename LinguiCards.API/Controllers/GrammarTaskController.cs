@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using LinguiCards.Application.Commands.GrammarTask.EvaluateGrammarTaskCommand;
 using LinguiCards.Application.Common.Models;
-using LinguiCards.Application.Common.Models.Integration;
 using LinguiCards.Application.Queries.GrammarTask.GetGrammarTaskQuery;
 using LinguiCards.Application.Queries.GrammarTaskType.GetAllGrammarTaskTypeDictionariesQuery;
 using MediatR;
@@ -31,11 +30,11 @@ public class GrammarTaskController : ControllerBase
 
     [Route("evaluation")]
     [HttpPost]
-    public async Task<GrammarTaskEvaluationDTO> EvaluateGrammarTask(string level, string taskText,
+    public async Task<string> EvaluateGrammarTask(int languageId, string level, string taskText,
         string userAnswer, string? topic = "", string? type = "")
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
-        return await _mediator.Send(new EvaluateGrammarTaskCommand(username, level, taskText, userAnswer, topic, type));
+        return await _mediator.Send(new EvaluateGrammarTaskCommand(username, languageId, level, taskText, userAnswer, topic, type));
     }
 
     [Route("types")]

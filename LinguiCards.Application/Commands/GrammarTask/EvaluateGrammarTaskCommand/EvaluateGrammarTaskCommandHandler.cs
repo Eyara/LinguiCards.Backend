@@ -1,60 +1,62 @@
 using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
-using LinguiCards.Application.Common.Models.Integration;
 using LinguiCards.Application.Constants;
 using LinguiCards.Application.Helpers;
 using MediatR;
 
 namespace LinguiCards.Application.Commands.GrammarTask.EvaluateGrammarTaskCommand;
 
-public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammarTaskCommand, GrammarTaskEvaluationDTO>
+public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammarTaskCommand, string>
 {
     private readonly IOpenAIService _openAiService;
     private readonly IUsersRepository _usersRepository;
     private readonly IGrammarTaskHistoryRepository _grammarTaskHistoryRepository;
-    private readonly IDailyGoalRepository _dailyGoalRepository;
     private readonly ILanguageRepository _languageRepository;
+    private readonly IDailyGoalRepository _dailyGoalRepository;
 
     public EvaluateGrammarTaskCommandHandler(
         IOpenAIService openAiService,
         IUsersRepository usersRepository,
         IGrammarTaskHistoryRepository grammarTaskHistoryRepository,
-        IDailyGoalRepository dailyGoalRepository,
-        ILanguageRepository languageRepository)
+        ILanguageRepository languageRepository,
+        IDailyGoalRepository dailyGoalRepository)
     {
         _openAiService = openAiService;
         _usersRepository = usersRepository;
         _grammarTaskHistoryRepository = grammarTaskHistoryRepository;
-        _dailyGoalRepository = dailyGoalRepository;
         _languageRepository = languageRepository;
+        _dailyGoalRepository = dailyGoalRepository;
     }
 
-    public async Task<GrammarTaskEvaluationDTO> Handle(EvaluateGrammarTaskCommand request,
+    public async Task<string> Handle(EvaluateGrammarTaskCommand request,
         CancellationToken cancellationToken)
     {
         var user = await _usersRepository.GetByNameAsync(request.Username, cancellationToken);
 
         if (user == null) throw new UserNotFoundException();
 
-        // Get language name from user's languages
-        var userLanguages = await _languageRepository.GetAllAsync(user.Id, cancellationToken);
-        var languageName = userLanguages.FirstOrDefault()?.Name ?? "Латынь";
+        var language = await _languageRepository.GetByIdAsync(request.LanguageId, cancellationToken);
+
+        if (language == null)
+        {
+            throw new LanguageNotFoundException();
+        }
 
         var response = await _openAiService.GetChatResponseAsync(
-            GrammarTaskPrompts.GetEvaluationGrammarTaskPrompt(languageName, request.Level, request.TaskText,
+            GrammarTaskPrompts.GetEvaluationGrammarTaskPrompt(language.Name, request.Level, request.TaskText,
                 request.UserAnswer, request.Topic, request.Type));
 
-        var parsedEvaluation = ParseGrammarTaskEvaluationOpenAI.ParseEvaluation(response);
+        var (expectedAnswer, explanation) = ParseGrammarTaskEvaluationOpenAi.ParseEvaluation(response);
 
-        await UpdateXpLevel(user, LearningSettings.LanguageLevelToNumber(request.Level), 1,
-            parsedEvaluation.Accuracy, cancellationToken);
+        var level = LearningSettings.LanguageLevelToNumber(request.Level);
+        await UpdateXpLevel(user, level, cancellationToken);
 
         await _grammarTaskHistoryRepository.AddAsync(new GrammarTaskHistoryDTO
         {
-            ExpectedAnswer = parsedEvaluation.ExpectedAnswer,
+            ExpectedAnswer = expectedAnswer,
             UserAnswer = request.UserAnswer,
-            Explanation = parsedEvaluation.Explanation,
+            Explanation = explanation,
             Level = request.Level,
             Type = request.Type ?? "",
             Topic = request.Topic ?? "",
@@ -62,16 +64,14 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        return parsedEvaluation;
+        return response;
     }
 
-    private async Task UpdateXpLevel(Domain.Entities.User user, int level, int taskCount, double accuracyPercent,
-        CancellationToken token)
+    private async Task UpdateXpLevel(Domain.Entities.User user, int level, CancellationToken token)
     {
         var requiredXp = CalculatorXP.CalculateXpRequired(user.Level);
 
-        accuracyPercent = Math.Clamp(accuracyPercent, 0, 100);
-        var xpGained = LearningSettings.SuccessXpStep * level * taskCount * (accuracyPercent / 100.0);
+        var xpGained = LearningSettings.SuccessXpStep * level;
         var newXp = xpGained + user.XP;
 
         var newLevel = user.Level;
@@ -84,8 +84,7 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
 
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
         
-        // Update daily goal with XP delta
-        await _dailyGoalRepository.AddXpAsync(user.Id, (int)xpGained, token);
+        await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, token);
     }
 }
 

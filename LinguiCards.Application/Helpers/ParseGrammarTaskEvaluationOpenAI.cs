@@ -1,18 +1,40 @@
 using System.Text.RegularExpressions;
-using LinguiCards.Application.Common.Models.Integration;
 
 namespace LinguiCards.Application.Helpers;
 
-public static class ParseGrammarTaskEvaluationOpenAI
+public static class ParseGrammarTaskEvaluationOpenAi
 {
-    public static GrammarTaskEvaluationDTO ParseEvaluation(string response)
+    public static (string ExpectedAnswer, string Explanation) ParseEvaluation(string response)
     {
-        var result = new GrammarTaskEvaluationDTO();
+        var expectedAnswer = "";
+        var explanation = "";
 
-        // TODO: Implement parsing logic based on the prompt format
-        // This is a placeholder - implement based on the actual response format from OpenAI
+        var expectedAnswerMatch = Regex.Match(response, @"Правильный ответ:\s*(.*?)\s*(?=Объяснение:|$)", RegexOptions.IgnoreCase);
+        if (expectedAnswerMatch.Success)
+        {
+            expectedAnswer = expectedAnswerMatch.Groups[1].Value.Trim();
+            if (expectedAnswer.Equals("нет", StringComparison.OrdinalIgnoreCase))
+            {
+                expectedAnswer = "";
+            }
+        }
 
-        return result;
+        var explanationMatch = Regex.Match(response, @"Объяснение:\s*(.*?)$", RegexOptions.IgnoreCase);
+        if (explanationMatch.Success)
+        {
+            explanation = explanationMatch.Groups[1].Value.Trim();
+            if (explanation.Equals("нет", StringComparison.OrdinalIgnoreCase))
+            {
+                explanation = "";
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(explanation) && string.IsNullOrWhiteSpace(expectedAnswer))
+        {
+            explanation = response;
+        }
+
+        return (expectedAnswer, explanation);
     }
 }
 
