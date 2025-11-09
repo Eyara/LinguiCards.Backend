@@ -12,7 +12,7 @@ public class LanguageDashboardStat
     public int TotalWords { get; set; }
     public int TotalTrainingDays { get; set; }
     
-    public string WordOfTheDay { get; set; }
+    public WordOfTheDay WordOfTheDay { get; set; }
 
     public List<string> BestActiveWordsByAccuracy { get; set; }
     public List<string> BestPassiveWordsByAccuracy { get; set; }
