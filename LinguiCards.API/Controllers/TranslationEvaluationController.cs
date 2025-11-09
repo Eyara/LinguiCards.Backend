@@ -28,8 +28,8 @@ public class TranslationEvaluationController : ControllerBase
     }
 
     [Route("evaluation")]
-    [HttpGet]
-    public async Task<TranslationEvaluationDTO> GetTranslationEvaluation(string level, string originalText,
+    [HttpPost]
+    public async Task<TranslationEvaluationDTO> EvaluateTranslation(string level, string originalText,
         string translation)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);

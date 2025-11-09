@@ -17,6 +17,8 @@ public static class DependencyInjection
         services.AddScoped<IUserSettingRepository, UserSettingRepository>();
         services.AddScoped<ITranslationEvaluationHistoryRepository, TranslationEvaluationHistoryRepository>();
         services.AddScoped<IDailyGoalRepository, DailyGoalRepository>();
+        services.AddScoped<IGrammarTaskHistoryRepository, GrammarTaskHistoryRepository>();
+        services.AddScoped<IGrammarTaskTypeDictionaryRepository, GrammarTaskTypeDictionaryRepository>();
 
         return services;
     }

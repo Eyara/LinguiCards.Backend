@@ -20,6 +20,7 @@ public class LinguiCardsDbContext : DbContext
     public DbSet<TranslationEvaluationHistory> TranslationEvaluationHistories { get; set; }
     public DbSet<DailyGoal> DailyGoals { get; set; }
     public DbSet<GrammarTaskHistory> GrammarTaskHistories { get; set; }
+    public DbSet<GrammarTaskTypeDictionary> GrammarTaskTypeDictionary { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -165,5 +166,12 @@ public class LinguiCardsDbContext : DbContext
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+        
+        modelBuilder.Entity<GrammarTaskTypeDictionary>()
+            .HasKey(e => e.Id);
+
+        modelBuilder.Entity<GrammarTaskTypeDictionary>()
+            .Property(e => e.Id)
+            .ValueGeneratedOnAdd();
     }
 }
