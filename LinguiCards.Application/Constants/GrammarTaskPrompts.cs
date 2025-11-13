@@ -12,6 +12,7 @@ Respond only with the exercise text that the student will see, written in Latin 
 
     private const string EvaluationGrammarTaskPrompt = @"
 Evaluate the grammar exercise. Always reply in Russian. Respond strictly in the following format:
+Твой ответ: *repeat student's answer*
 Правильный ответ: *provide the correct answer*. 
 Объяснение: *explain the grammar rule or why the answer is correct*. 
 If something is not applicable, write ""нет"". No additional text.
