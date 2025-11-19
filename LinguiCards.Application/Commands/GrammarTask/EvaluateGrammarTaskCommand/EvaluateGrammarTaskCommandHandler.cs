@@ -14,19 +14,22 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
     private readonly IGrammarTaskHistoryRepository _grammarTaskHistoryRepository;
     private readonly ILanguageRepository _languageRepository;
     private readonly IDailyGoalRepository _dailyGoalRepository;
+    private readonly IUserSettingRepository _userSettingRepository;
 
     public EvaluateGrammarTaskCommandHandler(
         IOpenAIService openAiService,
         IUsersRepository usersRepository,
         IGrammarTaskHistoryRepository grammarTaskHistoryRepository,
         ILanguageRepository languageRepository,
-        IDailyGoalRepository dailyGoalRepository)
+        IDailyGoalRepository dailyGoalRepository,
+        IUserSettingRepository userSettingRepository)
     {
         _openAiService = openAiService;
         _usersRepository = usersRepository;
         _grammarTaskHistoryRepository = grammarTaskHistoryRepository;
         _languageRepository = languageRepository;
         _dailyGoalRepository = dailyGoalRepository;
+        _userSettingRepository = userSettingRepository;
     }
 
     public async Task<string> Handle(EvaluateGrammarTaskCommand request,
@@ -84,7 +87,10 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
 
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
         
-        await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, token);
+        var userSettings = await _userSettingRepository.GetByUserIdAsync(user.Id, token);
+        var targetXp = userSettings?.DailyGoalXp ?? 0;
+        
+        await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, targetXp, token);
     }
 }
 

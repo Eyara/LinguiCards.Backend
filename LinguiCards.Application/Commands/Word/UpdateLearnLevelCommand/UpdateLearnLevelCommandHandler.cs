@@ -15,16 +15,18 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
     private readonly IWordChangeHistoryRepository _wordChangeHistoryRepository;
     private readonly IWordRepository _wordRepository;
     private readonly IDailyGoalRepository _dailyGoalRepository;
+    private readonly IUserSettingRepository _userSettingRepository;
 
     public UpdateLearnLevelCommandHandler(ILanguageRepository languageRepository, IUsersRepository usersRepository,
         IWordRepository wordRepository, IWordChangeHistoryRepository wordChangeHistoryRepository,
-        IDailyGoalRepository dailyGoalRepository)
+        IDailyGoalRepository dailyGoalRepository, IUserSettingRepository userSettingRepository)
     {
         _languageRepository = languageRepository;
         _usersRepository = usersRepository;
         _wordRepository = wordRepository;
         _wordChangeHistoryRepository = wordChangeHistoryRepository;
         _dailyGoalRepository = dailyGoalRepository;
+        _userSettingRepository = userSettingRepository;
     }
 
     public async Task<bool> Handle(UpdateLearnLevelCommand request, CancellationToken cancellationToken)
@@ -100,8 +102,10 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
 
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
         
-        // Update daily goal with XP delta
-        await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, token);
+        var userSettings = await _userSettingRepository.GetByUserIdAsync(user.Id, token);
+        var targetXp = userSettings?.DailyGoalXp ?? 0;
+        
+        await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, targetXp, token);
     }
 
     private string GetAnswerByTrainingType(WordDto word, TrainingType type)

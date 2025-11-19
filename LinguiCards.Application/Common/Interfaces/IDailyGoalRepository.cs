@@ -4,7 +4,7 @@ namespace LinguiCards.Application.Common.Interfaces;
 
 public interface IDailyGoalRepository
 {
-    Task AddXpAsync(int userId, int xpDelta, CancellationToken token);
+    Task AddXpAsync(int userId, int xpDelta, int targetXp, CancellationToken token);
     
     Task SetTotalXpAsync(int userId, int totalXp, int targetXp, CancellationToken token);
 
