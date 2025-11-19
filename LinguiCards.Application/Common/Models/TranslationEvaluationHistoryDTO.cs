@@ -14,4 +14,5 @@ public class TranslationEvaluationHistoryDTO
     public string Errors { get; set; }
     public string CriticalErrors { get; set; }
     public int UserId { get; set; }
+    public int? LanguageId { get; set; }
 }

@@ -3,6 +3,7 @@ using System;
 using LinguiCards.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LinguiCards.Infrastructure.Migrations
 {
     [DbContext(typeof(LinguiCardsDbContext))]
-    partial class LinguiCardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251119152416_AddLanguageIdToTranslationEvaluationHistory")]
+    partial class AddLanguageIdToTranslationEvaluationHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,7 +52,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CribDescriptions", (string)null);
+                    b.ToTable("CribDescriptions");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.DailyGoal", b =>
@@ -87,7 +90,7 @@ namespace LinguiCards.Infrastructure.Migrations
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("DailyGoals", (string)null);
+                    b.ToTable("DailyGoals");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.DefaultCrib", b =>
@@ -105,7 +108,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasIndex("LanguageId");
 
-                    b.ToTable("DefaultCribs", (string)null);
+                    b.ToTable("DefaultCribs");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.GrammarTaskHistory", b =>
@@ -156,7 +159,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GrammarTaskHistories", (string)null);
+                    b.ToTable("GrammarTaskHistories");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.GrammarTaskTypeDictionary", b =>
@@ -177,7 +180,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GrammarTaskTypeDictionary", (string)null);
+                    b.ToTable("GrammarTaskTypeDictionary");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.Language", b =>
@@ -204,7 +207,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Languages", (string)null);
+                    b.ToTable("Languages");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.LanguageDictionary", b =>
@@ -225,7 +228,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LanguageDictionaries", (string)null);
+                    b.ToTable("LanguageDictionaries");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.TranslationEvaluationHistory", b =>
@@ -277,7 +280,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TranslationEvaluationHistories", (string)null);
+                    b.ToTable("TranslationEvaluationHistories");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.User", b =>
@@ -313,7 +316,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.UserSetting", b =>
@@ -341,7 +344,7 @@ namespace LinguiCards.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserSettings", (string)null);
+                    b.ToTable("UserSettings");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.Word", b =>
@@ -379,7 +382,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasIndex("LanguageId");
 
-                    b.ToTable("Words", (string)null);
+                    b.ToTable("Words");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.WordChangeHistory", b =>
@@ -421,7 +424,7 @@ namespace LinguiCards.Infrastructure.Migrations
 
                     b.HasIndex("WordId");
 
-                    b.ToTable("WordChangeHistories", (string)null);
+                    b.ToTable("WordChangeHistories");
                 });
 
             modelBuilder.Entity("LinguiCards.Domain.Entities.DailyGoal", b =>

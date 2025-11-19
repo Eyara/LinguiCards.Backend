@@ -16,5 +16,6 @@ public class GrammarTaskHistoryDTO
     public DateTime CreatedAt { get; set; }
     
     public int UserId { get; set; }
+    public int? LanguageId { get; set; }
 }
 

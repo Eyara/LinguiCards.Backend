@@ -55,7 +55,8 @@ public class
             MinorIssues = string.Join(";;", parsedEvaluation.MinorIssues),
             Errors = string.Join(";;", parsedEvaluation.Errors),
             CriticalErrors = string.Join(";;", parsedEvaluation.CriticalErrors),
-            UserId = user.Id
+            UserId = user.Id,
+            LanguageId = request.LanguageId
         }, cancellationToken);
 
         return parsedEvaluation;

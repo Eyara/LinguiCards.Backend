@@ -65,6 +65,7 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
             Type = request.Type ?? "",
             Topic = request.Topic ?? "",
             UserId = user.Id,
+            LanguageId = request.LanguageId,
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 

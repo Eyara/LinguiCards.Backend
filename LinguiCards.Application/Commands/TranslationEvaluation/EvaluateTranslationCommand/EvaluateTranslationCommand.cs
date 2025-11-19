@@ -3,4 +3,4 @@ using MediatR;
 
 namespace LinguiCards.Application.Commands.TranslationEvaluation.EvaluateTranslationCommand;
 
-public record EvaluateTranslationCommand(string Username, string Level, string OriginalText, string Translation) : IRequest<TranslationEvaluationDTO>;
+public record EvaluateTranslationCommand(string Username, string Level, string OriginalText, string Translation, int? LanguageId = null) : IRequest<TranslationEvaluationDTO>;

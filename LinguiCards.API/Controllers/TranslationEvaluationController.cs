@@ -30,9 +30,9 @@ public class TranslationEvaluationController : ControllerBase
     [Route("evaluation")]
     [HttpPost]
     public async Task<TranslationEvaluationDTO> EvaluateTranslation(string level, string originalText,
-        string translation)
+        string translation, int? languageId = null)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
-        return await _mediator.Send(new EvaluateTranslationCommand(username, level, originalText, translation));
+        return await _mediator.Send(new EvaluateTranslationCommand(username, level, originalText, translation, languageId));
     }
 }

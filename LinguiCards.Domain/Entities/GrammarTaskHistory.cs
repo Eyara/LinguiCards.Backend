@@ -16,5 +16,6 @@ public class GrammarTaskHistory
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public int UserId { get; set; }
+    public int? LanguageId { get; set; }
     public User User { get; set; }
 }
