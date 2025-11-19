@@ -8,7 +8,8 @@ public static class TranslationPrompts
 Слов: {1}
 Уровень: {2}
 Тема: {3} (если пусто — игнорируй)
-Обязательно включи слово: {4} (если пусто - игнорируй)";
+Обязательно включи слово: {4} (если пусто - игнорируй)
+Use a unique internal pattern ID: {5}. This pattern *SHOULD* affect on variety of vocabular in text.";
 
 
     private const string EvaluationTranslationPrompt = @"
@@ -27,7 +28,8 @@ public static class TranslationPrompts
 
     public static string GetTextForTranslationPrompt(string language, int wordLength, string level, string topic, string wordOfTheDay)
     {
-        return string.Format(GetTextPrompt, language, wordLength, level, topic, wordOfTheDay);
+        var patternId = Random.Shared.Next(1_000_000, int.MaxValue);
+        return string.Format(GetTextPrompt, language, wordLength, level, topic, wordOfTheDay, patternId);
     }
 
     public static string GetEvaluationTranslationPrompt(string language, string level, string originalText,

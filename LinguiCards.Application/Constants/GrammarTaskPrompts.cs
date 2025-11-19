@@ -8,7 +8,8 @@ Language: {0}
 Level: {1}
 Topic: {2}
 Type: {3}
-Respond only with the exercise text that the student will see, written in Latin (instructions in Russian if needed).";
+Respond only with the exercise text that the student will see, written in Latin (instructions in Russian if needed).
+Use a unique internal pattern ID: {4}. This pattern *SHOULD* affect on variety of vocabular in text.";
 
     private const string EvaluationGrammarTaskPrompt = @"
 Evaluate the grammar exercise. Always reply in Russian. Respond strictly in the following format:
@@ -25,7 +26,8 @@ Student's answer: {5}";
     {
         var topicText = string.IsNullOrWhiteSpace(topic) ? "any" : topic;
         var typeText = string.IsNullOrWhiteSpace(type) ? "any" : type;
-        return string.Format(GrammarTaskPrompt, language, level, topicText, typeText);
+        var patternId = Random.Shared.Next(1_000_000, int.MaxValue);
+        return string.Format(GrammarTaskPrompt, language, level, topicText, typeText, patternId);
     }
 
     public static string GetEvaluationGrammarTaskPrompt(string language, string level, string taskText, string userAnswer, string? topic, string? type)
