@@ -8,6 +8,7 @@ public class GrammarTaskHistory
     public string UserAnswer { get; set; }
     public string Explanation { get; set; }
     
+    public int Accuracy { get; set; }
     public string Level { get; set; }
     public string Type { get; set; }
     public string Topic { get; set; }

@@ -4,10 +4,18 @@ namespace LinguiCards.Application.Helpers;
 
 public static class ParseGrammarTaskEvaluationOpenAi
 {
-    public static (string ExpectedAnswer, string Explanation) ParseEvaluation(string response)
+    public static (int Accuracy, string ExpectedAnswer, string Explanation) ParseEvaluation(string response)
     {
+        var accuracy = 0;
         var expectedAnswer = "";
         var explanation = "";
+
+        // Match the accuracy using regex
+        var accuracyMatch = Regex.Match(response, @"Точность:\s*(\d+)\s*%");
+        if (accuracyMatch.Success)
+        {
+            accuracy = int.Parse(accuracyMatch.Groups[1].Value);
+        }
 
         var expectedAnswerMatch = Regex.Match(response, @"Правильный ответ:\s*(.*?)\s*(?=Объяснение:|$)", RegexOptions.IgnoreCase);
         if (expectedAnswerMatch.Success)
@@ -34,7 +42,7 @@ public static class ParseGrammarTaskEvaluationOpenAi
             explanation = response;
         }
 
-        return (expectedAnswer, explanation);
+        return (accuracy, expectedAnswer, explanation);
     }
 }
 

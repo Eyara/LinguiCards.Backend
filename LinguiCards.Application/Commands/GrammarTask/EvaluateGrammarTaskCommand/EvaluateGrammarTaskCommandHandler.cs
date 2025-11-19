@@ -50,16 +50,17 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
             GrammarTaskPrompts.GetEvaluationGrammarTaskPrompt(language.Name, request.Level, request.TaskText,
                 request.UserAnswer, request.Topic, request.Type));
 
-        var (expectedAnswer, explanation) = ParseGrammarTaskEvaluationOpenAi.ParseEvaluation(response);
+        var (accuracy, expectedAnswer, explanation) = ParseGrammarTaskEvaluationOpenAi.ParseEvaluation(response);
 
         var level = LearningSettings.LanguageLevelToNumber(request.Level);
-        await UpdateXpLevel(user, level, cancellationToken);
+        await UpdateXpLevel(user, level, accuracy, cancellationToken);
 
         await _grammarTaskHistoryRepository.AddAsync(new GrammarTaskHistoryDTO
         {
             ExpectedAnswer = expectedAnswer,
             UserAnswer = request.UserAnswer,
             Explanation = explanation,
+            Accuracy = accuracy,
             Level = request.Level,
             Type = request.Type ?? "",
             Topic = request.Topic ?? "",
@@ -70,11 +71,12 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
         return response;
     }
 
-    private async Task UpdateXpLevel(Domain.Entities.User user, int level, CancellationToken token)
+    private async Task UpdateXpLevel(Domain.Entities.User user, int level, double accuracyPercent, CancellationToken token)
     {
         var requiredXp = CalculatorXP.CalculateXpRequired(user.Level);
 
-        var xpGained = LearningSettings.SuccessXpStep * level;
+        accuracyPercent = Math.Clamp(accuracyPercent, 0, 100);
+        var xpGained = LearningSettings.SuccessXpStep * level * (accuracyPercent / 100.0);
         var newXp = xpGained + user.XP;
 
         var newLevel = user.Level;
@@ -90,7 +92,7 @@ public class EvaluateGrammarTaskCommandHandler : IRequestHandler<EvaluateGrammar
         var userSettings = await _userSettingRepository.GetByUserIdAsync(user.Id, token);
         var targetXp = userSettings?.DailyGoalXp ?? 0;
         
-        await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, targetXp, token);
+        await _dailyGoalRepository.AddXpAsync(user.Id, (int)xpGained, targetXp, token);
     }
 }
 

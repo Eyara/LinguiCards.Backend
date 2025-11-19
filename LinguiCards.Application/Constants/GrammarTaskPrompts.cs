@@ -13,6 +13,7 @@ Use a unique internal pattern ID: {4}. This pattern *SHOULD* affect on variety o
 
     private const string EvaluationGrammarTaskPrompt = @"
 Evaluate the grammar exercise. Always reply in Russian. Respond strictly in the following format:
+Точность: N %. *that means accuracy of student's answer*
 Твой ответ: *repeat student's answer*
 Правильный ответ: *provide the correct answer*. 
 Объяснение: *explain the grammar rule or why the answer is correct*. 
