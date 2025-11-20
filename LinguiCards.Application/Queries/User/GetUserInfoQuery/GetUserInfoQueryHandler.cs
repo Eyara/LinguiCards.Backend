@@ -30,6 +30,8 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
         if (user == null) throw new UserNotFoundException();
 
         var dailyGoal = await _dailyGoalRepository.GetTodayGoalByUserId(user.Id, cancellationToken);
+        var completedGoalDays = await _dailyGoalRepository.GetCompletedGoalDaysByUserIdAsync(user.Id, cancellationToken);
+        var goalStreak = await _dailyGoalRepository.GetGoalStreakByUserIdAsync(user.Id, cancellationToken);
 
         var info = new UserInfo
         {
@@ -37,6 +39,8 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
             XpToNextLevel = CalculatorXP.CalculateXpRequired(user.Level),
             DailyXp = dailyGoal?.GainedXp ?? 0,
             Level = user.Level,
+            GoalStreak = goalStreak,
+            CompletedGoalDays = completedGoalDays.Select(d => (DateOnly?)d).ToList(),
             LanguageStats = new List<LanguageStat>()
         };
 

@@ -78,4 +78,54 @@ public class DailyGoalRepository : IDailyGoalRepository
 
         return entity == null ? null : _mapper.Map<DailyGoalDTO>(entity);
     }
+
+    public async Task<List<DateOnly>> GetCompletedGoalDaysByUserIdAsync(int userId, CancellationToken token)
+    {
+        var completedGoals = await _dbContext.DailyGoals
+            .AsNoTracking()
+            .Where(dg => dg.UserId == userId && dg.GainedXp >= dg.TargetXp)
+            .OrderByDescending(dg => dg.Date)
+            .Select(dg => dg.Date)
+            .ToListAsync(token);
+
+        return completedGoals;
+    }
+
+    public async Task<int> GetGoalStreakByUserIdAsync(int userId, CancellationToken token)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        
+        var completedGoals = await _dbContext.DailyGoals
+            .AsNoTracking()
+            .Where(dg => dg.UserId == userId && dg.GainedXp >= dg.TargetXp)
+            .OrderByDescending(dg => dg.Date)
+            .Select(dg => dg.Date)
+            .ToListAsync(token);
+
+        if (completedGoals.Count == 0)
+        {
+            return 0;
+        }
+
+        var completedDatesSet = completedGoals.ToHashSet();
+        var streak = 0;
+        DateOnly currentDate;
+
+        if (completedDatesSet.Contains(today))
+        {
+            currentDate = today;
+        }
+        else
+        {
+            currentDate = today.AddDays(-1);
+        }
+
+        while (completedDatesSet.Contains(currentDate))
+        {
+            streak++;
+            currentDate = currentDate.AddDays(-1);
+        }
+
+        return streak;
+    }
 }

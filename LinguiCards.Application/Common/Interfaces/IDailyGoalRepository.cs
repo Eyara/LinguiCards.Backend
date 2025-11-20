@@ -9,4 +9,8 @@ public interface IDailyGoalRepository
     Task SetTotalXpAsync(int userId, int totalXp, int targetXp, CancellationToken token);
 
     Task<DailyGoalDTO?> GetTodayGoalByUserId(int userId, CancellationToken token);
+    
+    Task<List<DateOnly>> GetCompletedGoalDaysByUserIdAsync(int userId, CancellationToken token);
+    
+    Task<int> GetGoalStreakByUserIdAsync(int userId, CancellationToken token);
 }
