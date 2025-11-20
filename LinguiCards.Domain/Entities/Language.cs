@@ -13,4 +13,5 @@ public class Language
     public LanguageDictionary LanguageDictionary { get; set; }
 
     public ICollection<Word> Words { get; set; }
+    public ICollection<IrregularVerb> IrregularVerbs { get; set; }
 }

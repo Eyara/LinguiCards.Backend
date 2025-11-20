@@ -12,6 +12,7 @@ public class LinguiCardsDbContext : DbContext
     public DbSet<User?> Users { get; set; }
     public DbSet<Language> Languages { get; set; }
     public DbSet<Word> Words { get; set; }
+    public DbSet<IrregularVerb> IrregularVerbs { get; set; }
     public DbSet<LanguageDictionary> LanguageDictionaries { get; set; }
     public DbSet<WordChangeHistory> WordChangeHistories { get; set; }
     public DbSet<DefaultCrib> DefaultCribs { get; set; }
@@ -60,6 +61,28 @@ public class LinguiCardsDbContext : DbContext
             .WithMany(l => l.Words)
             .HasForeignKey(w => w.LanguageId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<IrregularVerb>(entity =>
+        {
+            entity.HasKey(iv => iv.Id);
+
+            entity.Property(iv => iv.Id)
+                .ValueGeneratedOnAdd();
+
+            entity.Property(iv => iv.BaseForm)
+                .IsRequired();
+
+            entity.Property(iv => iv.PastSimple)
+                .IsRequired();
+
+            entity.Property(iv => iv.PastParticiple)
+                .IsRequired();
+
+            entity.HasOne(iv => iv.Language)
+                .WithMany(l => l.IrregularVerbs)
+                .HasForeignKey(iv => iv.LanguageId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<LanguageDictionary>()
             .HasKey(c => c.Id);

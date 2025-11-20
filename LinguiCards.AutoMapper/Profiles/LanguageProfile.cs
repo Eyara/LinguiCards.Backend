@@ -17,6 +17,7 @@ public class LanguageProfile : Profile
             .ForMember(dest => dest.User, opt => opt.Ignore())
             .ForMember(dest => dest.LanguageDictionary, opt => opt.Ignore())
             .ForMember(dest => dest.Words, opt => opt.Ignore())
+            .ForMember(dest => dest.IrregularVerbs, opt => opt.Ignore())
             .AfterMap((src,
                     dest) =>
                 {
