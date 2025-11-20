@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -154,15 +155,15 @@ using (var scope = app.Services.CreateScope())
     mapper.ConfigurationProvider.AssertConfigurationIsValid();
 }
 
+app.UseHttpsRedirection();
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
-
 app.UseRouting();
+app.UseHttpMetrics();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
-
-app.UseHttpsRedirection();
-app.UseMiddleware<ExceptionMiddleware>();
+app.MapMetrics("/metrics");
 
 using (var scope = app.Services.CreateScope())
 {
