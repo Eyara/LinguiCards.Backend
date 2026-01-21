@@ -69,6 +69,59 @@ public class DailyGoalRepository : IDailyGoalRepository
         await _dbContext.SaveChangesAsync(token);
     }
 
+    public async Task AddXpAndAddToByTranslationAsync(int userId, int xpDelta, int targetXp, CancellationToken token)
+    {
+        var dailyGoal = await _dbContext.DailyGoals
+            .FirstOrDefaultAsync(dg => dg.UserId == userId && dg.Date == DateOnly.FromDateTime(DateTime.Now), token);
+
+        if (dailyGoal != null)
+        {
+            dailyGoal.GainedXp += xpDelta;
+            dailyGoal.ByTranslation += xpDelta;
+            dailyGoal.TargetXp = targetXp;
+        }
+        else
+        {
+            var newGoal = new DailyGoal
+            {
+                UserId = userId,
+                GainedXp = xpDelta,
+                TargetXp = targetXp,
+                ByTranslation = xpDelta,
+                Date = DateOnly.FromDateTime(DateTime.Now)
+            };
+            await _dbContext.DailyGoals.AddAsync(newGoal, token);
+        }
+
+        await _dbContext.SaveChangesAsync(token);
+    }
+
+    public async Task AddXpAndAddToByGrammarAsync(int userId, int xpDelta, int targetXp, CancellationToken token)
+    {
+        var dailyGoal = await _dbContext.DailyGoals
+            .FirstOrDefaultAsync(dg => dg.UserId == userId && dg.Date == DateOnly.FromDateTime(DateTime.Now), token);
+
+        if (dailyGoal != null)
+        {
+            dailyGoal.GainedXp += xpDelta;
+            dailyGoal.ByGrammar += xpDelta;
+            dailyGoal.TargetXp = targetXp;
+        }
+        else
+        {
+            var newGoal = new DailyGoal
+            {
+                UserId = userId,
+                GainedXp = xpDelta,
+                TargetXp = targetXp,
+                ByGrammar = xpDelta,
+                Date = DateOnly.FromDateTime(DateTime.Now)
+            };
+            await _dbContext.DailyGoals.AddAsync(newGoal, token);
+        }
+
+        await _dbContext.SaveChangesAsync(token);
+    }
 
     public async Task<DailyGoalDTO?> GetTodayGoalByUserId(int userId, CancellationToken token)
     {
@@ -76,14 +129,33 @@ public class DailyGoalRepository : IDailyGoalRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(dg => dg.UserId == userId && dg.Date == DateOnly.FromDateTime(DateTime.Now), token);
 
-        return entity == null ? null : _mapper.Map<DailyGoalDTO>(entity);
+        if (entity == null) return null;
+
+        var userSetting = await _dbContext.UserSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(us => us.UserId == userId, token);
+
+        var dto = _mapper.Map<DailyGoalDTO>(entity);
+        
+        dto.IsCompleted = entity.GainedXp >= entity.TargetXp
+            && (userSetting == null || userSetting.DailyGoalByTranslation == null || entity.ByTranslation >= userSetting.DailyGoalByTranslation)
+            && (userSetting == null || userSetting.DailyGoalByGrammar == null || entity.ByGrammar >= userSetting.DailyGoalByGrammar);
+
+        return dto;
     }
 
     public async Task<List<DateOnly>> GetCompletedGoalDaysByUserIdAsync(int userId, CancellationToken token)
     {
+        var userSetting = await _dbContext.UserSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(us => us.UserId == userId, token);
+
         var completedGoals = await _dbContext.DailyGoals
             .AsNoTracking()
-            .Where(dg => dg.UserId == userId && dg.GainedXp >= dg.TargetXp)
+            .Where(dg => dg.UserId == userId 
+                && dg.GainedXp >= dg.TargetXp
+                && (userSetting == null || userSetting.DailyGoalByTranslation == null || dg.ByTranslation >= userSetting.DailyGoalByTranslation)
+                && (userSetting == null || userSetting.DailyGoalByGrammar == null || dg.ByGrammar >= userSetting.DailyGoalByGrammar))
             .OrderByDescending(dg => dg.Date)
             .Select(dg => dg.Date)
             .ToListAsync(token);
@@ -95,9 +167,16 @@ public class DailyGoalRepository : IDailyGoalRepository
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
         
+        var userSetting = await _dbContext.UserSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(us => us.UserId == userId, token);
+        
         var completedGoals = await _dbContext.DailyGoals
             .AsNoTracking()
-            .Where(dg => dg.UserId == userId && dg.GainedXp >= dg.TargetXp)
+            .Where(dg => dg.UserId == userId 
+                && dg.GainedXp >= dg.TargetXp
+                && (userSetting == null || userSetting.DailyGoalByTranslation == null || dg.ByTranslation >= userSetting.DailyGoalByTranslation)
+                && (userSetting == null || userSetting.DailyGoalByGrammar == null || dg.ByGrammar >= userSetting.DailyGoalByGrammar))
             .OrderByDescending(dg => dg.Date)
             .Select(dg => dg.Date)
             .ToListAsync(token);

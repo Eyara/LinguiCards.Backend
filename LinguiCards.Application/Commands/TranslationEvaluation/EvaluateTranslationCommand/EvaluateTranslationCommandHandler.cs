@@ -68,7 +68,8 @@ public class
         var requiredXp = CalculatorXP.CalculateXpRequired(user.Level);
 
         accuracyPercent = Math.Clamp(accuracyPercent, 0, 100);
-        var xpGained = LearningSettings.SuccessXpStep * level * wordCount * (accuracyPercent / 100.0);
+        var xpGained = LearningSettings.SuccessXpStep * level * (wordCount / 2) * (accuracyPercent / 100.0);
+        var xpGainedRounded = (int)Math.Round(xpGained);
         var newXp = xpGained + user.XP;
 
         var newLevel = user.Level;
@@ -84,6 +85,6 @@ public class
         var userSettings = await _userSettingRepository.GetByUserIdAsync(user.Id, token);
         var targetXp = userSettings?.DailyGoalXp ?? 0;
         
-        await _dailyGoalRepository.AddXpAsync(user.Id, (int)xpGained, targetXp, token);
+        await _dailyGoalRepository.AddXpAndAddToByTranslationAsync(user.Id, xpGainedRounded, targetXp, token);
     }
 }

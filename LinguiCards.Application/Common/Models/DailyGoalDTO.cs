@@ -12,6 +12,10 @@ public class DailyGoalDTO
 
     public int GainedXp { get; set; }
 
+    public int ByTranslation { get; set; }
+
+    public int ByGrammar { get; set; }
+
     public bool IsCompleted { get; set; }
 
     public DateTime CreatedAt { get; set; }

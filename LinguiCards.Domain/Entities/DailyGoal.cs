@@ -20,6 +20,12 @@ public class DailyGoal
     [Required]
     public int GainedXp { get; set; } = 0;
 
+    [Required]
+    public int ByTranslation { get; set; } = 0;
+
+    [Required]
+    public int ByGrammar { get; set; } = 0;
+
     [NotMapped]
     public bool IsCompleted => GainedXp >= TargetXp;
 

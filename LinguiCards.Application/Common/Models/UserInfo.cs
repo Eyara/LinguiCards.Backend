@@ -6,6 +6,8 @@ public class UserInfo
     public double Xp { get; set; }
     public double XpToNextLevel { get; set; }
     public int DailyXp { get; set; }
+    public int ByTranslation { get; set; }
+    public int ByGrammar { get; set; }
     public int GoalStreak { get; set; }
     public List<DateOnly?> CompletedGoalDays { get; set; }
     public List<LanguageStat> LanguageStats { get; set; }

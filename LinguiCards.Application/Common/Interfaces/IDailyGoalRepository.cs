@@ -8,6 +8,10 @@ public interface IDailyGoalRepository
     
     Task SetTotalXpAsync(int userId, int totalXp, int targetXp, CancellationToken token);
 
+    Task AddXpAndAddToByTranslationAsync(int userId, int xpDelta, int targetXp, CancellationToken token);
+    
+    Task AddXpAndAddToByGrammarAsync(int userId, int xpDelta, int targetXp, CancellationToken token);
+
     Task<DailyGoalDTO?> GetTodayGoalByUserId(int userId, CancellationToken token);
     
     Task<List<DateOnly>> GetCompletedGoalDaysByUserIdAsync(int userId, CancellationToken token);

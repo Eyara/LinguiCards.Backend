@@ -17,7 +17,7 @@ public class UserSettingRepository : IUserSettingRepository
         _mapper = mapper;
     }
 
-    public async Task AddOrUpdateAsync(int userId, int activeTrainingSize, int passiveTrainingSize, int? dailyGoalXp, CancellationToken token)
+    public async Task AddOrUpdateAsync(int userId, int activeTrainingSize, int passiveTrainingSize, int? dailyGoalXp, int? dailyGoalByTranslation, int? dailyGoalByGrammar, CancellationToken token)
     {
         var userSetting = await _dbContext.UserSettings
             .FirstOrDefaultAsync(us => us.UserId == userId, token);
@@ -27,6 +27,8 @@ public class UserSettingRepository : IUserSettingRepository
             userSetting.ActiveTrainingSize = activeTrainingSize;
             userSetting.PassiveTrainingSize = passiveTrainingSize;
             userSetting.DailyGoalXp = dailyGoalXp;
+            userSetting.DailyGoalByTranslation = dailyGoalByTranslation;
+            userSetting.DailyGoalByGrammar = dailyGoalByGrammar;
         }
         else
         {
@@ -35,7 +37,9 @@ public class UserSettingRepository : IUserSettingRepository
                 UserId = userId,
                 ActiveTrainingSize = activeTrainingSize,
                 PassiveTrainingSize = passiveTrainingSize,
-                DailyGoalXp = dailyGoalXp
+                DailyGoalXp = dailyGoalXp,
+                DailyGoalByTranslation = dailyGoalByTranslation,
+                DailyGoalByGrammar = dailyGoalByGrammar
             };
             await _dbContext.UserSettings.AddAsync(newSetting, token);
         }

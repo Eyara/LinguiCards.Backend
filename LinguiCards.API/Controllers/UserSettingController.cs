@@ -28,9 +28,9 @@ public class UserSettingController : ControllerBase
     }
 
     [HttpPost]
-    public async Task Post(int activeTrainingSize, int passiveTrainingSize, int? dailyGoalXp)
+    public async Task Post(int activeTrainingSize, int passiveTrainingSize, int? dailyGoalXp, int? dailyGoalByTranslation, int? dailyGoalByGrammar)
     {
         var username = User.FindFirstValue(ClaimTypes.Name);
-        await _mediator.Send(new AddOrUpdateUserSettingCommand(username, activeTrainingSize, passiveTrainingSize, dailyGoalXp));
+        await _mediator.Send(new AddOrUpdateUserSettingCommand(username, activeTrainingSize, passiveTrainingSize, dailyGoalXp, dailyGoalByTranslation, dailyGoalByGrammar));
     }
 }

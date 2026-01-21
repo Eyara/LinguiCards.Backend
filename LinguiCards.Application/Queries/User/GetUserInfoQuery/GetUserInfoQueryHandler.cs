@@ -38,6 +38,8 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
             Xp = user.XP,
             XpToNextLevel = CalculatorXP.CalculateXpRequired(user.Level),
             DailyXp = dailyGoal?.GainedXp ?? 0,
+            ByTranslation = dailyGoal?.ByTranslation ?? 0,
+            ByGrammar = dailyGoal?.ByGrammar ?? 0,
             Level = user.Level,
             GoalStreak = goalStreak,
             CompletedGoalDays = completedGoalDays.Select(d => (DateOnly?)d).ToList(),
