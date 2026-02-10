@@ -67,26 +67,38 @@ builder.Services.AddHttpClient<IOpenAIService, OpenAIClient>()
         {
             ConnectCallback = async (context, cancellationToken) =>
             {
-                var proxyA = proxyOptions.AddressA;
                 var proxyB = proxyOptions.AddressB;
-
                 var targetHost = context.DnsEndPoint.Host;
                 var targetPort = context.DnsEndPoint.Port;
+                switch (proxyOptions.ChainLength)
+                {
+                    case 1:
+                    {
+                        var tcp = new TcpClient();
+                        await tcp.ConnectAsync(proxyB.Host, proxyB.Port, cancellationToken);
+                        var stream = tcp.GetStream();
+                        await ProxyChainingHelper.SendConnect(stream, targetHost, targetPort, proxyB.Username,
+                            proxyB.Password, cancellationToken);
+                        return stream;
+                    }
+                    case 2:
+                    {
+                        var proxyA = proxyOptions.AddressA;
+                        var tcp = new TcpClient();
+                        await tcp.ConnectAsync(proxyA.Host, proxyA.Port, cancellationToken);
+                        var stream = tcp.GetStream();
 
-                // --- Connect to Proxy A ---
-                var tcp = new TcpClient();
-                await tcp.ConnectAsync(proxyA.Host, proxyA.Port, cancellationToken);
-                var stream = tcp.GetStream();
+                        await ProxyChainingHelper.SendConnect(stream, proxyB.Host, proxyB.Port, proxyA.Username,
+                            proxyA.Password, cancellationToken);
+                        await ProxyChainingHelper.SendConnect(stream, targetHost, targetPort, proxyB.Username,
+                            proxyB.Password, cancellationToken);
 
-                // --- Tunnel from Proxy A to Proxy B ---
-                await ProxyChainingHelper.SendConnect(stream, proxyB.Host, proxyB.Port, proxyA.Username,
-                    proxyA.Password, cancellationToken);
-
-                // --- Tunnel from Proxy B to Target ---
-                await ProxyChainingHelper.SendConnect(stream, targetHost, targetPort, proxyB.Username, proxyB.Password,
-                    cancellationToken);
-
-                return stream;
+                        return stream;
+                    }
+                    default:
+                        throw new InvalidOperationException(
+                            $"Invalid Proxy:ChainLength value '{proxyOptions.ChainLength}'. Supported values are 1 or 2.");
+                }
             }
         };
 

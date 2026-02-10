@@ -1,7 +1,8 @@
-﻿namespace LinguiCards.Application.Common.Options;
+namespace LinguiCards.Application.Common.Options;
 
 public class ProxyOptions
 {
+    public int ChainLength { get; set; } = 2;
     public ProxyAddress AddressA { get; set; } = null!;
     public ProxyAddress AddressB { get; set; } = null!;
 }
