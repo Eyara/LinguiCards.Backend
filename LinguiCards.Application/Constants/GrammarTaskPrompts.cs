@@ -16,7 +16,7 @@ Evaluate the grammar exercise. Always reply in Russian. Respond strictly in the 
 Точность: N %. *that means accuracy of student's answer*
 Твой ответ: *repeat student's answer*
 Правильный ответ: *provide the correct answer*. 
-Объяснение: *explain the grammar rule or why the answer is correct*. 
+Объяснение: *explain the grammar rule used in this exercise*. 
 If something is not applicable, write ""нет"". No additional text.
 
 Language: {0}. Level: {1}. Topic: {2}. Type: {3}.
