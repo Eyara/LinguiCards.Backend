@@ -1,4 +1,4 @@
-﻿namespace LinguiCards.Application.Common.Models;
+namespace LinguiCards.Application.Common.Models;
 
 public class UserInfo
 {
@@ -9,8 +9,18 @@ public class UserInfo
     public int ByTranslation { get; set; }
     public int ByGrammar { get; set; }
     public int GoalStreak { get; set; }
-    public List<DateOnly?> CompletedGoalDays { get; set; }
+    public List<GoalDay> GoalDays { get; set; }
     public List<LanguageStat> LanguageStats { get; set; }
+}
+
+public class GoalDay
+{
+    public DateOnly? Date { get; set; }
+    public int Xp { get; set; }
+    public int TargetXp { get; set; }
+    public int ByTranslation { get; set; }
+    public int ByGrammar { get; set; }
+    public bool IsCompleted { get; set; }
 }
 
 public class LanguageStat

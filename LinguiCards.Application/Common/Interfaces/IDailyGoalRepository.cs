@@ -1,4 +1,4 @@
-﻿using LinguiCards.Application.Common.Models;
+using LinguiCards.Application.Common.Models;
 
 namespace LinguiCards.Application.Common.Interfaces;
 
@@ -14,7 +14,7 @@ public interface IDailyGoalRepository
 
     Task<DailyGoalDTO?> GetTodayGoalByUserId(int userId, CancellationToken token);
     
-    Task<List<DateOnly>> GetCompletedGoalDaysByUserIdAsync(int userId, CancellationToken token);
+    Task<List<GoalDay>> GetGoalDaysByUserIdAsync(int userId, CancellationToken token);
     
     Task<int> GetGoalStreakByUserIdAsync(int userId, CancellationToken token);
 }

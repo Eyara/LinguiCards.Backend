@@ -1,4 +1,4 @@
-﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Constants;
@@ -30,7 +30,7 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
         if (user == null) throw new UserNotFoundException();
 
         var dailyGoal = await _dailyGoalRepository.GetTodayGoalByUserId(user.Id, cancellationToken);
-        var completedGoalDays = await _dailyGoalRepository.GetCompletedGoalDaysByUserIdAsync(user.Id, cancellationToken);
+        var goalDays = await _dailyGoalRepository.GetGoalDaysByUserIdAsync(user.Id, cancellationToken);
         var goalStreak = await _dailyGoalRepository.GetGoalStreakByUserIdAsync(user.Id, cancellationToken);
 
         var info = new UserInfo
@@ -42,7 +42,7 @@ public class GetUserInfoQueryHandler : IRequestHandler<GetUserInfoQuery, UserInf
             ByGrammar = dailyGoal?.ByGrammar ?? 0,
             Level = user.Level,
             GoalStreak = goalStreak,
-            CompletedGoalDays = completedGoalDays.Select(d => (DateOnly?)d).ToList(),
+            GoalDays = goalDays,
             LanguageStats = new List<LanguageStat>()
         };
 

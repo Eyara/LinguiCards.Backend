@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Domain.Entities;
@@ -144,23 +144,30 @@ public class DailyGoalRepository : IDailyGoalRepository
         return dto;
     }
 
-    public async Task<List<DateOnly>> GetCompletedGoalDaysByUserIdAsync(int userId, CancellationToken token)
+    public async Task<List<GoalDay>> GetGoalDaysByUserIdAsync(int userId, CancellationToken token)
     {
         var userSetting = await _dbContext.UserSettings
             .AsNoTracking()
             .FirstOrDefaultAsync(us => us.UserId == userId, token);
 
-        var completedGoals = await _dbContext.DailyGoals
+        var goalDays = await _dbContext.DailyGoals
             .AsNoTracking()
-            .Where(dg => dg.UserId == userId 
-                && dg.GainedXp >= dg.TargetXp
-                && (userSetting == null || userSetting.DailyGoalByTranslation == null || dg.ByTranslation >= userSetting.DailyGoalByTranslation)
-                && (userSetting == null || userSetting.DailyGoalByGrammar == null || dg.ByGrammar >= userSetting.DailyGoalByGrammar))
+            .Where(dg => dg.UserId == userId)
             .OrderByDescending(dg => dg.Date)
-            .Select(dg => dg.Date)
+            .Select(dg => new GoalDay
+            {
+                Date = dg.Date,
+                Xp = dg.GainedXp,
+                TargetXp = dg.TargetXp,
+                ByTranslation = dg.ByTranslation,
+                ByGrammar = dg.ByGrammar,
+                IsCompleted = dg.GainedXp >= dg.TargetXp
+                    && (userSetting == null || userSetting.DailyGoalByTranslation == null || dg.ByTranslation >= userSetting.DailyGoalByTranslation)
+                    && (userSetting == null || userSetting.DailyGoalByGrammar == null || dg.ByGrammar >= userSetting.DailyGoalByGrammar)
+            })
             .ToListAsync(token);
 
-        return completedGoals;
+        return goalDays;
     }
 
     public async Task<int> GetGoalStreakByUserIdAsync(int userId, CancellationToken token)
