@@ -1,4 +1,4 @@
-﻿using LinguiCards.Domain.Entities;
+using LinguiCards.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LinguiCards.Infrastructure;
@@ -61,6 +61,20 @@ public class LinguiCardsDbContext : DbContext
             .WithMany(l => l.Words)
             .HasForeignKey(w => w.LanguageId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Word>()
+            .Property(w => w.PassiveEaseFactor)
+            .HasDefaultValue(2.5);
+
+        modelBuilder.Entity<Word>()
+            .Property(w => w.ActiveEaseFactor)
+            .HasDefaultValue(2.5);
+
+        modelBuilder.Entity<Word>()
+            .HasIndex(w => w.PassiveNextReviewDate);
+
+        modelBuilder.Entity<Word>()
+            .HasIndex(w => w.ActiveNextReviewDate);
 
         modelBuilder.Entity<IrregularVerb>(entity =>
         {

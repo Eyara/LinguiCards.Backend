@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using LinguiCards.Application.Common.Models;
+using LinguiCards.Application.Helpers;
 using LinguiCards.Domain.Entities;
 
 namespace LinguiCards.AutoMapper.Profiles;
@@ -18,6 +19,14 @@ public class WordProfile : Profile
                 dest.LastUpdated = DateTime.UtcNow;
                 dest.PassiveLearnedPercent = 0;
                 dest.ActiveLearnedPercent = 0;
+                dest.PassiveEaseFactor = SrsCalculator.DefaultEaseFactor;
+                dest.ActiveEaseFactor = SrsCalculator.DefaultEaseFactor;
+                dest.PassiveIntervalDays = 0;
+                dest.ActiveIntervalDays = 0;
+                dest.PassiveRepetitionCount = 0;
+                dest.ActiveRepetitionCount = 0;
+                dest.PassiveNextReviewDate = null;
+                dest.ActiveNextReviewDate = null;
             });
 
         CreateMap<Word, WordExtendedDTO>()

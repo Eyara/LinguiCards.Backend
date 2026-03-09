@@ -1,4 +1,4 @@
-﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
@@ -46,35 +46,30 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
         var vocabularyType = TrainingToVocabulary.GetVocabularyType(request.TrainingType);
-
         var isActive = vocabularyType == VocabularyType.Active;
 
-        var learnedPercent = isActive ? wordEntity.ActiveLearnedPercent : wordEntity.PassiveLearnedPercent;
-
-        var newLevelPercent = request.WasSuccessful
-            ? learnedPercent + LearningSettings.LearnStep
-            : learnedPercent - LearningSettings.LearnStep;
+        var answerLength = isActive
+            ? (request.TrainingType == TrainingType.WritingFromNativeLanguage
+                ? wordEntity.Name.Length
+                : wordEntity.TranslatedName.Length)
+            : 0;
 
         var hintCount = request.HintCount ?? 0;
-        if (isActive)
-        {
-            newLevelPercent -=
-                Math.Round(
-                    (double)hintCount /
-                    (request.TrainingType == TrainingType.WritingFromNativeLanguage
-                        ? wordEntity.Name.Length
-                        : wordEntity.TranslatedName.Length) * LearningSettings.LearnStep, 2);
-        }
+        var quality = SrsCalculator.MapQuality(request.WasSuccessful, hintCount, answerLength);
 
-        newLevelPercent = Math.Max(newLevelPercent, 0);
-        newLevelPercent = Math.Min(newLevelPercent, 100);
+        var currentEf = isActive ? wordEntity.ActiveEaseFactor : wordEntity.PassiveEaseFactor;
+        var currentInterval = isActive ? wordEntity.ActiveIntervalDays : wordEntity.PassiveIntervalDays;
+        var currentReps = isActive ? wordEntity.ActiveRepetitionCount : wordEntity.PassiveRepetitionCount;
 
-        if (isActive)
-            await _wordRepository.UpdateActiveLearnLevel(request.WordId, newLevelPercent,
-                cancellationToken);
-        else
-            await _wordRepository.UpdatePassiveLearnLevel(request.WordId, newLevelPercent,
-                cancellationToken);
+        if (currentEf < SrsCalculator.MinEaseFactor)
+            currentEf = SrsCalculator.DefaultEaseFactor;
+
+        var srs = SrsCalculator.Calculate(currentEf, currentInterval, currentReps, quality);
+        var nextReview = DateTime.UtcNow.Date.AddDays(srs.IntervalDays);
+        var learnedPercent = SrsCalculator.DeriveLearnedPercent(srs.RepetitionCount, srs.IntervalDays);
+
+        await _wordRepository.UpdateSrsState(request.WordId, vocabularyType, srs.EaseFactor,
+            srs.IntervalDays, srs.RepetitionCount, nextReview, learnedPercent, cancellationToken);
 
         await _wordChangeHistoryRepository.AddAsync(request.WordId, request.WasSuccessful,
             (int)vocabularyType, wordEntity.PassiveLearnedPercent, wordEntity.ActiveLearnedPercent,
@@ -101,10 +96,10 @@ public class UpdateLearnLevelCommandHandler : IRequestHandler<UpdateLearnLevelCo
         }
 
         await _usersRepository.UpdateXPLevel(newXp, newLevel, user.Id, token);
-        
+
         var userSettings = await _userSettingRepository.GetByUserIdAsync(user.Id, token);
         var targetXp = userSettings?.DailyGoalXp ?? 0;
-        
+
         await _dailyGoalRepository.AddXpAsync(user.Id, xpGained, targetXp, token);
     }
 

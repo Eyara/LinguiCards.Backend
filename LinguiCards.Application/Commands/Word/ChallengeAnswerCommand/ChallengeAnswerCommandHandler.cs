@@ -1,8 +1,7 @@
-﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
-using LinguiCards.Application.Constants;
 using LinguiCards.Application.Helpers;
 using MediatR;
 
@@ -41,21 +40,23 @@ public class ChallengeAnswerCommandHandler : IRequestHandler<ChallengeAnswerComm
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
         var historyRecord = wordEntity.Histories.First(wh => wh.TrainingId == request.TrainingId);
+        var vocabularyType = (VocabularyType)historyRecord.VocabularyType;
+        var isActive = vocabularyType == VocabularyType.Active;
 
-        var isActive = (VocabularyType)historyRecord.VocabularyType == VocabularyType.Active;
-        var newLevelPercent = isActive ? historyRecord.ActiveLearned : historyRecord.PassiveLearned;
+        var currentEf = isActive ? wordEntity.ActiveEaseFactor : wordEntity.PassiveEaseFactor;
+        var currentInterval = isActive ? wordEntity.ActiveIntervalDays : wordEntity.PassiveIntervalDays;
+        var currentReps = isActive ? wordEntity.ActiveRepetitionCount : wordEntity.PassiveRepetitionCount;
 
-        newLevelPercent += LearningSettings.LearnStep * 2;
+        if (currentEf < SrsCalculator.MinEaseFactor)
+            currentEf = SrsCalculator.DefaultEaseFactor;
 
-        newLevelPercent = Math.Max(newLevelPercent, 0);
-        newLevelPercent = Math.Min(newLevelPercent, 100);
+        const int challengeQuality = 4;
+        var srs = SrsCalculator.Calculate(currentEf, currentInterval, currentReps, challengeQuality);
+        var nextReview = DateTime.UtcNow.Date.AddDays(srs.IntervalDays);
+        var learnedPercent = SrsCalculator.DeriveLearnedPercent(srs.RepetitionCount, srs.IntervalDays);
 
-        if (isActive)
-            await _wordRepository.UpdateActiveLearnLevel(request.WordId, newLevelPercent,
-                cancellationToken);
-        else
-            await _wordRepository.UpdatePassiveLearnLevel(request.WordId, newLevelPercent,
-                cancellationToken);
+        await _wordRepository.UpdateSrsState(request.WordId, vocabularyType, srs.EaseFactor,
+            srs.IntervalDays, srs.RepetitionCount, nextReview, learnedPercent, cancellationToken);
 
         return true;
     }

@@ -1,8 +1,7 @@
-﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Exceptions.Base;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
-using LinguiCards.Application.Constants;
 using LinguiCards.Application.Helpers;
 using MediatR;
 
@@ -39,29 +38,13 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
         if (languageEntity.UserId != user.Id) throw new EntityOwnershipException();
 
-        var allWords = await _wordRepository.GetAllToRecalculateAsync(request.LanguageId, cancellationToken);
-
-        await UpdateLearnLevel(
-            allWords,
-            VocabularyType.Passive,
-            cancellationToken
-        );
-
-        await UpdateLearnLevel(
-            allWords,
-            VocabularyType.Active,
-            cancellationToken
-        );
-
         var (activeTrainingSize, passiveTrainingSize) = await GetTrainingSizes(user.Id, cancellationToken);
 
-        var resultPassive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
-            VocabularyType.Passive,
-            cancellationToken, passiveTrainingSize);
+        var resultPassive = await _wordRepository.GetDueForReview(request.LanguageId,
+            VocabularyType.Passive, passiveTrainingSize, cancellationToken);
 
-        var resultActive = await _wordRepository.GetUnlearned(request.LanguageId, LearningSettings.LearnThreshold,
-            VocabularyType.Active,
-            cancellationToken, activeTrainingSize);
+        var resultActive = await _wordRepository.GetDueForReview(request.LanguageId,
+            VocabularyType.Active, activeTrainingSize, cancellationToken);
 
         var result = new List<TrainingWord>();
 
@@ -170,7 +153,6 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
 
             switch (type)
             {
-                // Adjust name or translated name if there is a collision in allWords
                 case TrainingType.FromLearnLanguage:
                 case TrainingType.WritingFromLearnLanguage:
                     modifiedName = ResolveNameConflict(words[i].Name, words[i].TranslatedName, filteredWords, true);
@@ -220,7 +202,6 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
     {
         var allWords = await _wordRepository.GetAllAsync(languageId, token);
 
-        // TODO: make-up exception
         if (allWords.Count < 3) throw new Exception();
 
         var result = allWords
@@ -250,57 +231,10 @@ public class GetUnlearnedWordsQueryHandler : IRequestHandler<GetUnlearnedWordsQu
             if (i < fromNativeLangBoundary)
                 return TrainingType.FromNativeLanguage;
 
-            return TrainingType.WordConnect; // Remaining 20%
+            return TrainingType.WordConnect;
         }
 
-        // Default case for active vocabulary
         return i < count / 2 ? TrainingType.WritingFromLearnLanguage : TrainingType.WritingFromNativeLanguage;
-    }
-
-
-    private async Task UpdateLearnLevel(IEnumerable<WordDto> words, VocabularyType vocabularyType,
-        CancellationToken cancellationToken)
-    {
-        var wordUpdates = new List<(int wordId, double passivePercent, double activePercent)>();
-
-        foreach (var word in words)
-            if (ShouldUpdate(word))
-            {
-                var daysDifference = GetDaysDifference(word);
-                var (newPassivePercent, newActivePercent) =
-                    CalculateNewLearnedPercent(word, daysDifference, vocabularyType);
-
-                wordUpdates.Add((word.Id, newPassivePercent, newActivePercent));
-            }
-
-        if (wordUpdates.Any()) await _wordRepository.UpdateLearnedPercentRangeAsync(wordUpdates, cancellationToken);
-    }
-
-    private bool ShouldUpdate(WordDto word)
-    {
-        return word.LastUpdated.HasValue && word.LastUpdated < DateTime.Today;
-    }
-
-    private int GetDaysDifference(WordDto word)
-    {
-        return (DateTime.Today - word.LastUpdated.Value).Days;
-    }
-
-    private (double newPassivePercent, double newActivePercent) CalculateNewLearnedPercent(WordDto word,
-        int daysDifference, VocabularyType vocabularyType)
-    {
-        var newPassiveLearnedPercent = vocabularyType == VocabularyType.Active
-            ? word.PassiveLearnedPercent
-            : Math.Max(Math.Round(word.PassiveLearnedPercent - LearningSettings.DayWeight * daysDifference, 2), 0);
-
-        var newActiveLearnedPercent = vocabularyType == VocabularyType.Active
-            ? Math.Max(Math.Round(word.ActiveLearnedPercent - LearningSettings.DayWeight * daysDifference, 2), 0)
-            : word.ActiveLearnedPercent;
-
-        newActiveLearnedPercent = Math.Min(newActiveLearnedPercent, 100);
-        newPassiveLearnedPercent = Math.Min(newPassiveLearnedPercent, 100);
-
-        return (newPassiveLearnedPercent, newActiveLearnedPercent);
     }
 
     private async Task<(int activeTrainingSize, int passiveTrainingSize)> GetTrainingSizes(int userId,

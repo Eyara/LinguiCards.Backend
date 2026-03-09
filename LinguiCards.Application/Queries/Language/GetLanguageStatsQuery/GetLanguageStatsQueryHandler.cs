@@ -1,4 +1,4 @@
-﻿using LinguiCards.Application.Common.Exceptions;
+using LinguiCards.Application.Common.Exceptions;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
 using LinguiCards.Application.Constants;
@@ -48,6 +48,16 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
             ? Math.Round(words.Sum(word => word.PassiveLearnedPercent) / words.Count, 2) 
             : 0;
 
+        var today = DateTime.UtcNow.Date;
+        var tomorrow = today.AddDays(1);
+
+        var passiveDueToday = await _wordRepository.CountDueForReview(request.LanguageId, VocabularyType.Passive, today.AddDays(1), cancellationToken);
+        var activeDueToday = await _wordRepository.CountDueForReview(request.LanguageId, VocabularyType.Active, today.AddDays(1), cancellationToken);
+        var passiveDueTomorrow = await _wordRepository.CountDueForReview(request.LanguageId, VocabularyType.Passive, tomorrow.AddDays(1), cancellationToken);
+        var activeDueTomorrow = await _wordRepository.CountDueForReview(request.LanguageId, VocabularyType.Active, tomorrow.AddDays(1), cancellationToken);
+        var passiveNew = await _wordRepository.CountNewWords(request.LanguageId, VocabularyType.Passive, cancellationToken);
+        var activeNew = await _wordRepository.CountNewWords(request.LanguageId, VocabularyType.Active, cancellationToken);
+
         return new LanguageDashboardStat
         {
             TotalWords = totalWords,
@@ -59,6 +69,9 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
             PassiveAverageAccuracy = averagePassiveAccuracy,
             ActiveAverageLearnedPercent = activeAverageLearnedPercent,
             PassiveAverageLearnedPercent = passiveAverageLearnedPercent,
+            WordsDueToday = passiveDueToday + activeDueToday,
+            WordsDueTomorrow = passiveDueTomorrow + activeDueTomorrow,
+            NewWordsRemaining = Math.Max(passiveNew, activeNew),
             BestActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, true),
             WorstActiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Active, false),
             BestPassiveWordsByAccuracy = GetTopWordsByAccuracy(words, VocabularyType.Passive, true),
@@ -163,15 +176,15 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
             }
         }
 
-        var unlearnedWords = await _wordRepository.GetUnlearned(
+        var dueWords = await _wordRepository.GetDueForReview(
             languageId,
-            LearningSettings.LearnThreshold,
             VocabularyType.Passive,
+            50,
             cancellationToken
         );
 
         List<WordDto> wordsToSelectFrom;
-        if (unlearnedWords.Count == 0)
+        if (dueWords.Count == 0)
         {
             wordsToSelectFrom = await _wordRepository.GetAllAsync(languageId, cancellationToken);
             if (wordsToSelectFrom.Count == 0)
@@ -181,7 +194,7 @@ public class GetLanguageStatsQueryHandler : IRequestHandler<GetLanguageStatsQuer
         }
         else
         {
-            wordsToSelectFrom = unlearnedWords;
+            wordsToSelectFrom = dueWords;
         }
 
         var datePart = DateTime.UtcNow.Date.ToString("yyyyMMdd");

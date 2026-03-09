@@ -1,4 +1,4 @@
-﻿namespace LinguiCards.Application.Common.Models;
+namespace LinguiCards.Application.Common.Models;
 
 public class WordDto
 {
@@ -9,6 +9,16 @@ public class WordDto
     public double PassiveLearnedPercent { get; set; }
     public double ActiveLearnedPercent { get; set; }
     public DateTime? LastUpdated { get; set; }
+
+    public double PassiveEaseFactor { get; set; }
+    public int PassiveIntervalDays { get; set; }
+    public int PassiveRepetitionCount { get; set; }
+    public DateTime? PassiveNextReviewDate { get; set; }
+
+    public double ActiveEaseFactor { get; set; }
+    public int ActiveIntervalDays { get; set; }
+    public int ActiveRepetitionCount { get; set; }
+    public DateTime? ActiveNextReviewDate { get; set; }
 
     public int LanguageId { get; set; }
 }

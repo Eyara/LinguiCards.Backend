@@ -1,4 +1,4 @@
-﻿namespace LinguiCards.Application.Common.Models;
+namespace LinguiCards.Application.Common.Models;
 
 public class LanguageDashboardStat
 {
@@ -12,6 +12,10 @@ public class LanguageDashboardStat
     public int TotalWords { get; set; }
     public int TotalTrainingDays { get; set; }
     
+    public int WordsDueToday { get; set; }
+    public int WordsDueTomorrow { get; set; }
+    public int NewWordsRemaining { get; set; }
+
     public WordOfTheDay WordOfTheDay { get; set; }
 
     public List<string> BestActiveWordsByAccuracy { get; set; }

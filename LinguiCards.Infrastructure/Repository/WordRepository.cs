@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
@@ -60,14 +60,74 @@ public class WordRepository : IWordRepository
             .ToListAsync(token);
     }
 
-    public async Task<List<WordDto>> GetAllToRecalculateAsync(int languageId, CancellationToken token)
+    public async Task<List<WordDto>> GetDueForReview(int languageId, VocabularyType type, int limit,
+        CancellationToken token)
     {
-        return await _dbContext.Words
-            .Where(w => w.LanguageId == languageId && (!w.LastUpdated.HasValue || w.LastUpdated.Value < DateTime.UtcNow.Date))
-            .OrderByDescending(w => w.ActiveLearnedPercent)
-            .ThenByDescending(w => w.PassiveLearnedPercent)
+        var now = DateTime.UtcNow;
+
+        var overdueQuery = type == VocabularyType.Passive
+            ? _dbContext.Words
+                .Where(w => w.LanguageId == languageId && w.PassiveNextReviewDate != null &&
+                            w.PassiveNextReviewDate <= now)
+                .OrderBy(w => w.PassiveNextReviewDate)
+            : _dbContext.Words
+                .Where(w => w.LanguageId == languageId && w.ActiveNextReviewDate != null &&
+                            w.ActiveNextReviewDate <= now)
+                .OrderBy(w => w.ActiveNextReviewDate);
+
+        var overdueWords = await overdueQuery
+            .Take(limit)
             .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
             .ToListAsync(token);
+
+        if (overdueWords.Count >= limit)
+            return overdueWords;
+
+        var remaining = limit - overdueWords.Count;
+        var overdueIds = overdueWords.Select(w => w.Id).ToHashSet();
+
+        var newWordsQuery = type == VocabularyType.Passive
+            ? _dbContext.Words
+                .Where(w => w.LanguageId == languageId && w.PassiveNextReviewDate == null &&
+                            !overdueIds.Contains(w.Id))
+                .OrderBy(w => w.CreatedOn)
+            : _dbContext.Words
+                .Where(w => w.LanguageId == languageId && w.ActiveNextReviewDate == null &&
+                            !overdueIds.Contains(w.Id))
+                .OrderBy(w => w.CreatedOn);
+
+        var newWords = await newWordsQuery
+            .Take(remaining)
+            .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(token);
+
+        overdueWords.AddRange(newWords);
+        return overdueWords;
+    }
+
+    public async Task<int> CountDueForReview(int languageId, VocabularyType type, DateTime asOf,
+        CancellationToken token)
+    {
+        if (type == VocabularyType.Passive)
+            return await _dbContext.Words
+                .CountAsync(
+                    w => w.LanguageId == languageId && w.PassiveNextReviewDate != null &&
+                         w.PassiveNextReviewDate <= asOf, token);
+
+        return await _dbContext.Words
+            .CountAsync(
+                w => w.LanguageId == languageId && w.ActiveNextReviewDate != null &&
+                     w.ActiveNextReviewDate <= asOf, token);
+    }
+
+    public async Task<int> CountNewWords(int languageId, VocabularyType type, CancellationToken token)
+    {
+        if (type == VocabularyType.Passive)
+            return await _dbContext.Words
+                .CountAsync(w => w.LanguageId == languageId && w.PassiveNextReviewDate == null, token);
+
+        return await _dbContext.Words
+            .CountAsync(w => w.LanguageId == languageId && w.ActiveNextReviewDate == null, token);
     }
 
     public async Task<PaginatedResult<WordDto>> GetAllPaginatedAsync(int languageId, int pageNumber, int pageSize,
@@ -108,25 +168,6 @@ public class WordRepository : IWordRepository
     }
 
 
-    public async Task<List<WordDto>> GetUnlearned(int languageId, double percentThreshold, VocabularyType type,
-        CancellationToken token, int? top = 15)
-    {
-        var wordsQuery = type == VocabularyType.Passive
-            ? _dbContext.Words
-                .Where(w => w.LanguageId == languageId && w.PassiveLearnedPercent < percentThreshold)
-            : _dbContext.Words
-                .Where(w => w.LanguageId == languageId && w.ActiveLearnedPercent < percentThreshold);
-
-        wordsQuery = wordsQuery
-            .OrderByDescending(w => Guid.NewGuid());
-
-        if (top.HasValue)
-            wordsQuery = wordsQuery.Take(top.Value);
-
-        return await wordsQuery
-            .ProjectTo<WordDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(token);
-    }
 
     public async Task AddAsync(WordDto word, int languageId, CancellationToken token)
     {
@@ -169,51 +210,33 @@ public class WordRepository : IWordRepository
         await _dbContext.SaveChangesAsync(token);
     }
 
-    public async Task UpdatePassiveLearnLevel(int wordId, double passivePercent, CancellationToken token)
+    public async Task UpdateSrsState(int wordId, VocabularyType vocabularyType, double easeFactor,
+        int intervalDays, int repetitionCount, DateTime nextReviewDate, double learnedPercent,
+        CancellationToken token)
     {
         var word = await _dbContext.Words
             .FirstOrDefaultAsync(w => w.Id == wordId, token);
 
         if (word == null) throw new Exception();
 
-        word.PassiveLearnedPercent = passivePercent;
-        word.LastUpdated = DateTime.UtcNow;
-        ;
-        await _dbContext.SaveChangesAsync(token);
-    }
-
-    public async Task UpdateActiveLearnLevel(int wordId, double activePercent, CancellationToken token)
-    {
-        var word = await _dbContext.Words
-            .FirstOrDefaultAsync(w => w.Id == wordId, token);
-
-        if (word == null) throw new Exception();
-
-        word.ActiveLearnedPercent = activePercent;
-        word.LastUpdated = DateTime.UtcNow;
-        ;
-        await _dbContext.SaveChangesAsync(token);
-    }
-
-    public async Task UpdateLearnedPercentRangeAsync(
-        List<(int wordId, double passivePercent, double activePercent)> wordUpdates, CancellationToken token)
-    {
-        var wordIds = wordUpdates.Select(w => w.wordId).ToList();
-
-        var words = await _dbContext.Words
-            .Where(w => wordIds.Contains(w.Id))
-            .ToListAsync(token);
-
-        if (!words.Any()) throw new Exception("No words found.");
-
-        foreach (var word in words)
+        if (vocabularyType == VocabularyType.Active)
         {
-            var updateInfo = wordUpdates.First(w => w.wordId == word.Id);
-            word.PassiveLearnedPercent = updateInfo.passivePercent;
-            word.ActiveLearnedPercent = updateInfo.activePercent;
-            word.LastUpdated = DateTime.UtcNow;
+            word.ActiveEaseFactor = easeFactor;
+            word.ActiveIntervalDays = intervalDays;
+            word.ActiveRepetitionCount = repetitionCount;
+            word.ActiveNextReviewDate = nextReviewDate;
+            word.ActiveLearnedPercent = learnedPercent;
+        }
+        else
+        {
+            word.PassiveEaseFactor = easeFactor;
+            word.PassiveIntervalDays = intervalDays;
+            word.PassiveRepetitionCount = repetitionCount;
+            word.PassiveNextReviewDate = nextReviewDate;
+            word.PassiveLearnedPercent = learnedPercent;
         }
 
+        word.LastUpdated = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(token);
     }
 
