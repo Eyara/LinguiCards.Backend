@@ -170,6 +170,28 @@ public class DailyGoalRepository : IDailyGoalRepository
         return goalDays;
     }
 
+    public async Task<List<DailyGoalDTO>> GetByYearAsync(int userId, int year, CancellationToken token)
+    {
+        return await _dbContext.DailyGoals
+            .AsNoTracking()
+            .Where(dg => dg.UserId == userId && dg.Date.Year == year)
+            .OrderBy(dg => dg.Date)
+            .Select(dg => new DailyGoalDTO
+            {
+                Id = dg.Id,
+                UserId = dg.UserId,
+                Date = dg.Date,
+                TargetXp = dg.TargetXp,
+                GainedXp = dg.GainedXp,
+                ByTranslation = dg.ByTranslation,
+                ByGrammar = dg.ByGrammar,
+                IsCompleted = dg.GainedXp >= dg.TargetXp,
+                CreatedAt = dg.CreatedAt,
+                UpdatedAt = dg.UpdatedAt
+            })
+            .ToListAsync(token);
+    }
+
     public async Task<int> GetGoalStreakByUserIdAsync(int userId, CancellationToken token)
     {
         var today = DateOnly.FromDateTime(DateTime.Now);

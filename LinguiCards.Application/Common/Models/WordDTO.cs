@@ -8,6 +8,7 @@ public class WordDto
 
     public double PassiveLearnedPercent { get; set; }
     public double ActiveLearnedPercent { get; set; }
+    public DateTime CreatedOn { get; set; }
     public DateTime? LastUpdated { get; set; }
 
     public double PassiveEaseFactor { get; set; }

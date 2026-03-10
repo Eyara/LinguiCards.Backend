@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using LinguiCards.Application.Common.Interfaces;
 using LinguiCards.Application.Common.Models;
@@ -54,4 +54,51 @@ public class WordChangeHistoryRepository : IWordChangeHistoryRepository
             .ToListAsync(token);
     }
 
+    public async Task<List<WordChangeHistoryDTO>> GetByLanguageIdAsync(int languageId, DateTime? from,
+        CancellationToken token)
+    {
+        var query = _dbContext.WordChangeHistories
+            .AsNoTracking()
+            .Where(h => h.Word.LanguageId == languageId);
+
+        if (from.HasValue)
+            query = query.Where(h => h.ChangedOn >= from.Value);
+
+        return await query
+            .OrderBy(h => h.ChangedOn)
+            .ProjectTo<WordChangeHistoryDTO>(_mapper.ConfigurationProvider)
+            .ToListAsync(token);
+    }
+
+    public async Task<Dictionary<int, List<WordChangeHistoryDTO>>> GetGroupedByWordAsync(int languageId,
+        int? minAttempts, CancellationToken token)
+    {
+        var query = _dbContext.WordChangeHistories
+            .AsNoTracking()
+            .Where(h => h.Word.LanguageId == languageId);
+
+        var grouped = await query
+            .GroupBy(h => h.WordId)
+            .Where(g => !minAttempts.HasValue || g.Count() >= minAttempts.Value)
+            .Select(g => new
+            {
+                WordId = g.Key,
+                Histories = g.Select(h => new WordChangeHistoryDTO
+                {
+                    Id = h.Id,
+                    IsCorrectAnswer = h.IsCorrectAnswer,
+                    PassiveLearned = h.PassiveLearned,
+                    ActiveLearned = h.ActiveLearned,
+                    TrainingId = h.TrainingId,
+                    WordId = h.WordId,
+                    VocabularyType = h.VocabularyType,
+                    ChangedOn = h.ChangedOn,
+                    Answer = h.Answer,
+                    CorrectAnswer = h.CorrectAnswer
+                }).ToList()
+            })
+            .ToListAsync(token);
+
+        return grouped.ToDictionary(g => g.WordId, g => g.Histories);
+    }
 }

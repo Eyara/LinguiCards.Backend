@@ -17,4 +17,6 @@ public interface IDailyGoalRepository
     Task<List<GoalDay>> GetGoalDaysByUserIdAsync(int userId, CancellationToken token);
     
     Task<int> GetGoalStreakByUserIdAsync(int userId, CancellationToken token);
+
+    Task<List<DailyGoalDTO>> GetByYearAsync(int userId, int year, CancellationToken token);
 }
